@@ -1,0 +1,144 @@
+const permissions = {
+
+  // ======================
+  // ROLES
+  // ======================
+  MEMBER: "member",
+  CREATOR: "creator",
+  BUSINESS: "business",
+  ADMIN: "admin",
+  SUPERADMIN: "superadmin",
+
+  // ======================
+  // SUBSCRIPTION PLANS
+  // ======================
+  PLANS: {
+    FREE_MEMBER: "FREE_MEMBER",
+    FREE_CREATOR: "FREE_CREATOR",
+    FREE_BUSINESS: "FREE_BUSINESS",
+
+    MEMBER_BASIC: "MEMBER_BASIC",
+    MEMBER_PLUS: "MEMBER_PLUS",
+    MEMBER_VIP: "MEMBER_VIP",
+
+    CREATOR_BASIC: "CREATOR_BASIC",
+    CREATOR_PLUS: "CREATOR_PLUS",
+    CREATOR_PRO: "CREATOR_PRO",
+
+    BUSINESS_BASIC: "BUSINESS_BASIC",
+    BUSINESS_PRO: "BUSINESS_PRO",
+    BUSINESS_ENTERPRISE: "BUSINESS_ENTERPRISE"
+  },
+
+  // ======================
+  // FEATURE PERMISSIONS
+  // ======================
+  FEATURES: {
+
+    // POSTS
+    CREATE_POST: "CREATE_POST",
+    DELETE_POST: "DELETE_POST",
+
+    // REELS
+    CREATE_REEL: "CREATE_REEL",
+    GO_LIVE_REEL: "GO_LIVE_REEL",
+
+    // PODCAST
+    CREATE_PODCAST: "CREATE_PODCAST",
+    UPLOAD_EPISODE: "UPLOAD_EPISODE",
+
+    // MARKETPLACE
+    CREATE_MARKETPLACE_LISTING: "CREATE_MARKETPLACE_LISTING",
+
+    // CREATOR HIRE
+    APPLY_CREATOR_HIRE: "APPLY_CREATOR_HIRE",
+
+    // BUSINESS FIND
+    APPLY_BUSINESS_FIND: "APPLY_BUSINESS_FIND",
+
+    // MESSAGING
+    SEND_MESSAGE: "SEND_MESSAGE",
+
+    // WALLET
+    WITHDRAW_FUNDS: "WITHDRAW_FUNDS",
+
+    // ANALYTICS
+    VIEW_ANALYTICS: "VIEW_ANALYTICS",
+
+    // LIVE
+    GO_LIVE: "GO_LIVE",
+
+    // ADMIN
+    ADMIN_PANEL: "ADMIN_PANEL"
+  },
+
+  // ======================
+  // SUBSCRIPTION MATRIX
+  // ======================
+  MATRIX: {
+
+    FREE_MEMBER: [
+      "CREATE_POST",
+      "CREATE_REEL",
+      "SEND_MESSAGE"
+    ],
+
+    FREE_CREATOR: [
+      "CREATE_POST",
+      "CREATE_REEL",
+      "CREATE_PODCAST",
+      "SEND_MESSAGE"
+    ],
+
+    FREE_BUSINESS: [
+      "CREATE_POST",
+      "CREATE_REEL",
+      "CREATE_MARKETPLACE_LISTING",
+      "SEND_MESSAGE"
+    ],
+
+    CREATOR_PLUS: [
+      "CREATE_POST",
+      "CREATE_REEL",
+      "CREATE_PODCAST",
+      "UPLOAD_EPISODE",
+      "CREATE_MARKETPLACE_LISTING",
+      "APPLY_CREATOR_HIRE",
+      "GO_LIVE",
+      "VIEW_ANALYTICS"
+    ],
+
+    CREATOR_PRO: [
+      "CREATE_POST",
+      "CREATE_REEL",
+      "CREATE_PODCAST",
+      "UPLOAD_EPISODE",
+      "CREATE_MARKETPLACE_LISTING",
+      "APPLY_CREATOR_HIRE",
+      "GO_LIVE",
+      "VIEW_ANALYTICS",
+      "WITHDRAW_FUNDS"
+    ],
+
+    BUSINESS_PRO: [
+      "CREATE_POST",
+      "CREATE_REEL",
+      "CREATE_MARKETPLACE_LISTING",
+      "APPLY_BUSINESS_FIND",
+      "VIEW_ANALYTICS",
+      "WITHDRAW_FUNDS"
+    ],
+
+    BUSINESS_ENTERPRISE: [
+      "CREATE_POST",
+      "CREATE_REEL",
+      "CREATE_MARKETPLACE_LISTING",
+      "APPLY_BUSINESS_FIND",
+      "VIEW_ANALYTICS",
+      "WITHDRAW_FUNDS",
+      "GO_LIVE"
+    ]
+  }
+};
+
+module.exports = permissions;

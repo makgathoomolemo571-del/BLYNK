@@ -1,0 +1,9 @@
+module.exports = {
+
+  PROFILE_CREATED:
+    "PROFILE_CREATED",
+
+  PROFILE_UPDATED:
+    "PROFILE_UPDATED"
+
+};

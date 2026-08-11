@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Verify Your BLYNK Email</title>
+</head>
+
+<body style="margin:0;padding:40px 0;background:#f4f5f7;font-family:Arial,sans-serif;">
+
+<div style="max-width:650px;margin:auto;background:#fff;border-radius:12px;overflow:hidden;">
+
+    <div style="background:#5B21B6;color:#fff;text-align:center;padding:35px;">
+        <div style="font-size:34px;font-weight:bold;letter-spacing:2px;">
+            BLYNK
+        </div>
+        <h2>Verify Your Email</h2>
+    </div>
+
+    <div style="padding:45px;">
+
+        <h2>Hello {{NAME}},</h2>
+
+<p>
+Thank you for joining <strong>BLYNK</strong>.
+Please verify your email address to activate your account.
+</p>
+
+<p style="text-align:center;">
+    <a
+        href="{{VERIFY_URL}}"
+        target="_blank"
+        style="
+            display:inline-block;
+            background:#7C3AED;
+            color:#ffffff;
+            text-decoration:none;
+            padding:16px 36px;
+            border-radius:8px;
+            font-weight:bold;
+        "
+    >
+        VERIFY MY BLYNK ACCOUNT
+    </a>
+</p>
+
+<p>
+If the button does not work, use this link:
+</p>
+
+<p style="word-break:break-all;">
+    {{VERIFY_URL}}
+</p>
+
+<p>
+This verification link expires in 24 hours.
+</p>
+
+<p>
+If you did not create a BLYNK account, simply ignore this email.
+</p>
+
+    </div>
+
+    <div style="padding:25px;background:#fafafa;text-align:center;color:#777;font-size:13px;">
+        © ${new Date().getFullYear()} BLYNK Social Platform
+    </div>
+
+</div>
+
+</body>
+</html>
