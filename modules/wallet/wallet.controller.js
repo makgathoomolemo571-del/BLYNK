@@ -8,7 +8,7 @@ async (req,res,next) => {
 
     const result =
     await service.createWallet(
-      req.user._id
+      req.user.userId
     );
 
     res.status(201)
@@ -22,7 +22,7 @@ async (req,res,next) => {
 exports.getMine = async (req, res, next) => {
     try {
 
-        const wallet = await service.getMine(req.user._id);
+        const wallet = await service.getMine(req.user.userId);
 
         res.json(wallet);
 
