@@ -175,7 +175,7 @@ app.use("/api/sponsorships", sponsorshipRoutes);
 // ======================
 // DATABASE + SERVER START
 // ======================
-connectDB();
+
 
 const PORT = process.env.PORT || 3000;
 
