@@ -1,30 +1,52 @@
-const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
+const brevo = require("@getbrevo/brevo");
+
 console.log("🔥 LOADED EMAIL SERVICE:", __filename);
+
 class EmailService {
 
     constructor() {
 
+        console.log("📧 INITIALIZING BREVO API");
+
+        if (!process.env.BREVO_API_KEY) {
+            console.error(
+                "❌ BREVO_API_KEY IS MISSING"
+            );
+        } else {
+            console.log(
+                "✅ BREVO_API_KEY FOUND"
+            );
+        }
+
+        this.api = new brevo.TransactionalEmailsApi();
+
+        this.api.setApiKey(
+            brevo.TransactionalEmailsApiApiKeys.apiKey,
+            process.env.BREVO_API_KEY
+        );
         this.transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
-port: Number(process.env.EMAIL_PORT),
-secure: false,
-auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-}
-});
+    port: Number(process.env.EMAIL_PORT || 587),
+    secure: false,
 
-        this.transporter.verify((error, success) => {
-    if (error) {
-        console.error("EMAIL ERROR:", error);
-    } else {
-        console.log("✅ EMAIL Ready");
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    },
+
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
+
+    tls: {
+        minVersion: "TLSv1.2"
     }
 });
 
     }
+
 
     loadTemplate(file) {
 
@@ -42,90 +64,221 @@ auth: {
 
     }
 
-    
 
-async sendEmail(to, subject, html) {
-    console.log("\n========== BLYNK EMAIL TEST ==========");
-    console.log("FROM:", JSON.stringify(process.env.EMAIL_FROM));
-    console.log("TO:", JSON.stringify(to));
-    console.log("SUBJECT:", JSON.stringify(subject));
+    async sendEmail(to, subject, html) {
 
-    try {
-        const info = await this.transporter.sendMail({
-            from: process.env.EMAIL_FROM,
-            to: to,
-            subject: subject,
-            html: html,
-        });
+        console.log(
+            "\n========== BLYNK EMAIL =========="
+        );
 
-        console.log("========== NODEMAILER RESULT ==========");
-        console.dir(info, { depth: null });
-        console.log("========================================\n");
+        console.log(
+            "FROM:",
+            process.env.EMAIL_FROM
+        );
 
-        return info;
+        console.log(
+            "TO:",
+            to
+        );
 
-    } catch (error) {
-        console.error("========== EMAIL FAILED ==========");
-        console.error(error);
-        console.error("==================================");
+        console.log(
+            "SUBJECT:",
+            subject
+        );
 
-        throw error;
+        try {
+
+            const email =
+                new brevo.SendSmtpEmail();
+
+            email.sender = {
+                name: "BLYNK",
+                email:
+                    process.env.EMAIL_FROM_EMAIL ||
+                    "noreply@blynk.co.za"
+            };
+
+            email.to = [
+                {
+                    email: to
+                }
+            ];
+
+            email.subject = subject;
+
+            email.htmlContent = html;
+
+
+            const result =
+                await this.api.sendTransacEmail(
+                    email
+                );
+
+
+            console.log(
+                "========== BREVO API SUCCESS =========="
+            );
+
+            console.dir(
+                result,
+                { depth: null }
+            );
+
+            console.log(
+                "========================================"
+            );
+
+
+            return result;
+
+        } catch (error) {
+
+            console.error(
+                "========== BREVO API FAILED =========="
+            );
+
+            console.error(
+                error?.response?.body ||
+                error?.body ||
+                error
+            );
+
+            console.error(
+                "======================================"
+            );
+
+            throw error;
+
+        }
+
     }
-}
 
-async sendVerificationEmail(user, token) {
 
-    const frontendUrl =
-        process.env.FRONTEND_URL || "http://localhost:5173";
+    async sendVerificationEmail(
+        user,
+        token
+    ) {
 
-    const verifyUrl =
-        `${frontendUrl}/verify-email?token=${encodeURIComponent(token)}`;
+        const frontendUrl =
+            process.env.FRONTEND_URL ||
+            "http://localhost:5173";
 
-    console.log("=================================");
-    console.log("EMAIL VERIFICATION");
-    console.log("USER:", user.email);
-    console.log("TOKEN:", token);
-    console.log("FRONTEND_URL:", frontendUrl);
-    console.log("VERIFY URL:", verifyUrl);
-    console.log("=================================");
 
-    let html = this.loadTemplate("verify-email.html");
+        const verifyUrl =
+            `${frontendUrl}/verify-email?token=${encodeURIComponent(token)}`;
 
-    const name =
-        user.firstName ||
-        user.username ||
-        "there";
 
-    html = html
-        .replace(/{{NAME}}/g, name)
-        .replace(/{{VERIFY_URL}}/g, verifyUrl)
-        .replace(/{{YEAR}}/g, new Date().getFullYear());
+        console.log(
+            "================================="
+        );
 
-    console.log("NAME INSERTED:", !html.includes("{{NAME}}"));
-    console.log("VERIFY URL INSERTED:", html.includes(verifyUrl));
-    console.log("LEFTOVER VERIFY PLACEHOLDER:", html.includes("{{VERIFY_URL}}"));
-    console.log("LEFTOVER NAME PLACEHOLDER:", html.includes("{{NAME}}"));
+        console.log(
+            "EMAIL VERIFICATION"
+        );
 
-    console.log("FINAL VERIFY URL IN EMAIL:", verifyUrl);
+        console.log(
+            "USER:",
+            user.email
+        );
 
-    return this.sendEmail(
-        user.email,
-        "Verify your BLYNK account",
-        html
-    );
-}
+        console.log(
+            "FRONTEND_URL:",
+            frontendUrl
+        );
 
-    async sendResetPasswordEmail(user, token) {
+        console.log(
+            "VERIFY URL:",
+            verifyUrl
+        );
 
-        const resetUrl =
-`${process.env.APP_URL}/api/auth/reset-password?token=${token}`;
+        console.log(
+            "================================="
+        );
+
 
         let html =
-this.loadTemplate("reset-password.html");
+            this.loadTemplate(
+                "verify-email.html"
+            );
+
+
+        const name =
+            user.firstName ||
+            user.username ||
+            "there";
+
 
         html = html
-            .replace(/{{NAME}}/g, user.firstName || user.username)
-            .replace(/{{RESET_URL}}/g, resetUrl);
+
+            .replace(
+                /{{NAME}}/g,
+                name
+            )
+
+            .replace(
+                /{{VERIFY_URL}}/g,
+                verifyUrl
+            )
+
+            .replace(
+                /{{YEAR}}/g,
+                new Date().getFullYear()
+            );
+
+
+        console.log(
+            "VERIFY URL INSERTED:",
+            html.includes(verifyUrl)
+        );
+
+
+        return this.sendEmail(
+
+            user.email,
+
+            "Verify your BLYNK account",
+
+            html
+
+        );
+
+    }
+
+
+    async sendResetPasswordEmail(
+        user,
+        token
+    ) {
+
+        const frontendUrl =
+            process.env.FRONTEND_URL ||
+            "http://localhost:5173";
+
+
+        const resetUrl =
+            `${frontendUrl}/reset-password?token=${encodeURIComponent(token)}`;
+
+
+        let html =
+            this.loadTemplate(
+                "reset-password.html"
+            );
+
+
+        html = html
+
+            .replace(
+                /{{NAME}}/g,
+                user.firstName ||
+                user.username ||
+                "there"
+            )
+
+            .replace(
+                /{{RESET_URL}}/g,
+                resetUrl
+            );
+
 
         return this.sendEmail(
 
@@ -139,18 +292,25 @@ this.loadTemplate("reset-password.html");
 
     }
 
+
     async sendWelcomeEmail(user) {
 
         let html =
-this.loadTemplate("welcome.html");
+            this.loadTemplate(
+                "welcome.html"
+            );
+
 
         html = html.replace(
 
             /{{NAME}}/g,
 
-            user.firstName || user.username
+            user.firstName ||
+            user.username ||
+            "there"
 
         );
+
 
         return this.sendEmail(
 
@@ -166,4 +326,6 @@ this.loadTemplate("welcome.html");
 
 }
 
-module.exports = new EmailService();
+
+module.exports =
+    new EmailService();
