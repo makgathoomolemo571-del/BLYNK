@@ -256,31 +256,61 @@ console.log("================================");
 
 async verifyEmail(token) {
 
-    const record =
-        await EmailVerification.findOne({
-            token
-        });
+    console.log("");
+    console.log("========================================");
+    console.log("🔐 VERIFY EMAIL DEBUG");
+    console.log("TOKEN RECEIVED:", token);
+    console.log("TOKEN LENGTH:", token?.length);
+    console.log("========================================");
 
-    if (!record)
-        throw new Error("Invalid verification link.");
+    const record = await EmailVerification.findOne({
+        token: token
+    });
+
+    console.log("VERIFICATION RECORD:", record);
+
+    if (!record) {
+
+        console.log("❌ TOKEN NOT FOUND IN MONGODB");
+
+        return {
+            success: false,
+            message: "Invalid verification link."
+        };
+    }
+
+    console.log("✅ TOKEN FOUND");
+    console.log("USER ID:", record.userId);
+    console.log("EXPIRES:", record.expiresAt);
+    console.log("NOW:", new Date());
 
     if (record.expiresAt < new Date()) {
+
+        console.log("❌ TOKEN EXPIRED");
 
         await EmailVerification.deleteOne({
             _id: record._id
         });
 
-        throw new Error(
-            "Verification link expired."
-        );
-
+        return {
+            success: false,
+            message: "Verification link expired."
+        };
     }
 
-    const user =
-        await User.findById(record.userId);
+    const user = await User.findById(record.userId);
 
-    if (!user)
-        throw new Error("User not found.");
+    console.log("USER FOUND:", !!user);
+
+    if (!user) {
+
+        console.log("❌ USER NOT FOUND");
+
+        return {
+            success: false,
+            message: "User not found."
+        };
+    }
 
     user.emailVerified = true;
     user.verified = true;
@@ -291,15 +321,12 @@ async verifyEmail(token) {
         _id: record._id
     });
 
+    console.log("✅ EMAIL VERIFIED SUCCESSFULLY");
+
     return {
-
         success: true,
-
-        message:
-            "Email verified successfully."
-
+        message: "Email verified successfully."
     };
-
 }
 
 async resendVerification(email) {
