@@ -5,7 +5,7 @@ const http = require("http");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-const cron = require("./jobs/cron");
+// const cron = require("./jobs/cron");
 const corsOptions = require("./config/cors");
 const rateLimit = require("express-rate-limit");
 
