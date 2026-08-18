@@ -24,6 +24,7 @@ console.log("AUTH:", req.headers.authorization);
     req.user = {
       _id: decoded.userId,
       userId: decoded.userId,
+      role: decoded.role,
       token: token,
     };
 

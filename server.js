@@ -5,7 +5,8 @@ const http = require("http");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
-// const cron = require("./jobs/cron");
+const cron = require("./jobs/cron");
+const corsOptions = require("./config/cors");
 const rateLimit = require("express-rate-limit");
 
 const connectDB = require("./config/database");
@@ -109,19 +110,41 @@ process.on("unhandledRejection", (err) => {
 // ======================
 app.use(helmet());
 
-app.use(cors({
-   origin:   [
-     "http://localhost:4000",
-     "http://localhost:5173",
-     "http://localhost:3000",
-      "https://blynk.co.za",
-   ],
-  credentials: true
+app.use(cors(corsOptions));
+app.use((req, res, next) => {
+
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("REQUEST:", req.method, req.originalUrl);
+    console.log("ORIGIN:", req.headers.origin);
+    console.log("CONTENT-TYPE:", req.headers["content-type"]);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+    next();
+});
+
+ app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({
+    extended: true,
+    limit: "10mb"
 }));
 
-app.use(express.json({ limit: "10mb" }));
 
-app.use(morgan("dev"));
+app.use(morgan("combined"));
+
+app.get("/api/health", (req, res) => {
+    res.json({
+        success: true,
+        message: "BLYNK API is alive",
+        timestamp: new Date().toISOString()
+    });
+});
+
+app.get("/api", (req, res) => {
+    res.json({
+        success: true,
+        message: "BLYNK API"
+    });
+});
 
 // ======================
 // SOCKET CORE (CHAT + LIVE)
