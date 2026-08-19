@@ -1,69 +1,213 @@
-
 <!DOCTYPE html>
 <html>
+
 <head>
 <meta charset="UTF-8">
 <title>Verify Your BLYNK Email</title>
 </head>
 
-<body style="margin:0;padding:40px 0;background:#f4f5f7;font-family:Arial,sans-serif;">
+<body style="
+margin:0;
+padding:40px 0;
+background:#f4f5f7;
+font-family:Arial,sans-serif;
+">
 
-<div style="max-width:650px;margin:auto;background:#fff;border-radius:12px;overflow:hidden;">
+<div style="
+max-width:650px;
+margin:auto;
+background:#fff;
+border-radius:12px;
+overflow:hidden;
+">
 
-    <div style="background:#5B21B6;color:#fff;text-align:center;padding:35px;">
-        <div style="font-size:34px;font-weight:bold;letter-spacing:2px;">
+    <!-- HEADER -->
+
+    <div style="
+    background:#5B21B6;
+    color:#fff;
+    text-align:center;
+    padding:35px;
+    ">
+
+        <div style="
+        font-size:34px;
+        font-weight:bold;
+        letter-spacing:2px;
+        ">
             BLYNK
         </div>
-        <h2>Verify Your Email</h2>
+
+        <h2>
+            Welcome to BLYNK
+        </h2>
+
     </div>
+
+
+    <!-- CONTENT -->
 
     <div style="padding:45px;">
 
-        <h2>Hello {{NAME}},</h2>
+        <h2>
+            Hello {{NAME}},
+        </h2>
 
-<p>
-Thank you for joining <strong>BLYNK</strong>.
-Please verify your email address to activate your account.
-</p>
+        <p>
+            Thank you for joining
+            <strong>BLYNK</strong>.
+        </p>
 
-<p style="text-align:center;">
-    <a
-        href="{{VERIFY_URL}}"
-        target="_blank"
-        style="
-            display:inline-block;
-            background:#7C3AED;
-            color:#ffffff;
-            text-decoration:none;
-            padding:16px 36px;
-            border-radius:8px;
-            font-weight:bold;
-        "
-    >
-        VERIFY MY BLYNK ACCOUNT
-    </a>
-</p>
+        <p>
+            Your BLYNK account has been created.
+            Please verify your email address to activate
+            your account.
+        </p>
 
-<p>
-If the button does not work, use this link:
-</p>
 
-<p style="word-break:break-all;">
-    {{VERIFY_URL}}
-</p>
+        <!-- ACCOUNT INFORMATION -->
 
-<p>
-This verification link expires in 24 hours.
-</p>
+        <div style="
+        background:#f8f7ff;
+        border:1px solid #e5e7eb;
+        border-radius:12px;
+        padding:20px;
+        margin:25px 0;
+        ">
 
-<p>
-If you did not create a BLYNK account, simply ignore this email.
-</p>
+            <h3 style="
+            margin-top:0;
+            color:#5B21B6;
+            ">
+                Your BLYNK Account
+            </h3>
+
+            <p>
+                <strong>Name:</strong>
+                {{NAME}}
+            </p>
+
+            <p>
+                <strong>Username:</strong>
+                {{USERNAME}}
+            </p>
+
+            <p>
+                <strong>Subscription:</strong>
+                {{SUBSCRIPTION}}
+            </p>
+
+            <p>
+                <strong>Role:</strong>
+                {{ROLE}}
+            </p>
+
+            <p>
+                <strong>Your Referral Number:</strong>
+                {{REFERRAL_NUMBER}}
+            </p>
+
+        </div>
+
+
+        <!-- VERIFY -->
+
+        <p style="text-align:center;">
+
+            <a
+                href="{{VERIFY_URL}}"
+                target="_blank"
+                style="
+                display:inline-block;
+                background:#7C3AED;
+                color:#ffffff;
+                text-decoration:none;
+                padding:16px 36px;
+                border-radius:8px;
+                font-weight:bold;
+                "
+            >
+                VERIFY MY BLYNK ACCOUNT
+            </a>
+
+        </p>
+
+
+        <p>
+            If the button does not work, use this link:
+        </p>
+
+        <p style="
+        word-break:break-all;
+        ">
+            {{VERIFY_URL}}
+        </p>
+
+
+        <!-- REFERRAL INFORMATION -->
+
+        <div style="
+        background:#fff7ed;
+        border:1px solid #fed7aa;
+        border-radius:12px;
+        padding:20px;
+        margin-top:25px;
+        ">
+
+            <h3 style="
+            margin-top:0;
+            color:#c2410c;
+            ">
+                🎁 Invite Friends to BLYNK
+            </h3>
+
+            <p>
+                Share your referral number with friends
+                and family.
+            </p>
+
+            <p>
+                When a new member joins using your referral
+                number and verifies their email:
+            </p>
+
+            <p>
+                <strong>Existing member:</strong>
+                +1,000 tokens +10 points
+            </p>
+
+            <p>
+                <strong>New member:</strong>
+                +500 tokens +5 points
+            </p>
+
+        </div>
+
+
+        <p>
+            This verification link expires in 24 hours.
+        </p>
+
+        <p>
+            If you did not create a BLYNK account,
+            simply ignore this email.
+        </p>
 
     </div>
 
-    <div style="padding:25px;background:#fafafa;text-align:center;color:#777;font-size:13px;">
-        © ${new Date().getFullYear()} BLYNK Social Platform
+
+    <!-- FOOTER -->
+
+    <div style="
+    padding:25px;
+    background:#fafafa;
+    text-align:center;
+    color:#777;
+    font-size:13px;
+    ">
+
+        © {{YEAR}} BLYNK Social Platform
+
     </div>
 
 </div>

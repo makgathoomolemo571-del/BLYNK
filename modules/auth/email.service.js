@@ -127,17 +127,32 @@ class EmailService {
             this.loadTemplate("verify-email.html");
 
         const name =
-            user.firstName ||
-            user.username ||
-            "there";
+    user.firstName ||
+    user.displayName ||
+    user.username ||
+    "there";
+
+const username =
+    user.username || "";
+
+const subscription =
+    user.subscriptionPlan || "FREE_MEMBER";
+
+const role =
+    user.role || "member";
+
+const referralNumber =
+    user.referralNumber || "Not available";
 
         html = html
-            .replace(/{{NAME}}/g, name)
-            .replace(/{{VERIFY_URL}}/g, verifyUrl)
-            .replace(
-                /{{YEAR}}/g,
-                new Date().getFullYear()
-            );
+           .replace(/{{NAME}}/g, name)
+    .replace(/{{USERNAME}}/g, username)
+    .replace(/{{SUBSCRIPTION}}/g, subscription)
+    .replace(/{{ROLE}}/g, role)
+    .replace(/{{REFERRAL_NUMBER}}/g, referralNumber)
+    .replace(/{{VERIFY_URL}}/g, verifyUrl)
+    .replace(/{{YEAR}}/g, new Date().getFullYear());
+        
 
         console.log(
             "VERIFY URL INSERTED:",

@@ -13,7 +13,8 @@ sendNotification
 =
 require("../notification/notification.helper");
 const PasswordReset = require("./passwordReset.model");
-
+const referralService =
+  require("../referral/referral.service");
 const emailService = require("./email.service");
 
 const User = require("../user/user.model");
@@ -53,6 +54,25 @@ console.log("PLAN:", data.plan);
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 
+   let referrer = null;
+
+if (data.referralCode) {
+
+  referrer =
+    await User.findOne({
+      referralCode:
+        data.referralCode
+          .trim()
+          .toUpperCase()
+    });
+
+  if (!referrer) {
+    throw new Error(
+      "Invalid referral number"
+    );
+  }
+}
+
     const user = await User.create({
 
     firstName:data.firstName,
@@ -86,13 +106,22 @@ console.log("PLAN:", data.plan);
     emailVerified:false,
     verified:false,
 
-    accountStatus:"ACTIVE",
+    status:"active",
 
     acceptTerms:data.acceptTerms,
 
     acceptPrivacy:data.acceptPrivacy,
 
-    marketingConsent:data.marketingConsent
+    marketingConsent:data.marketingConsent,
+
+// REFERRAL
+    referralCode: referralCode,
+
+    referredBy: referringUser
+        ? referringUser._id
+        : null,
+
+    referralRewarded: false
 
 });
 
@@ -102,6 +131,31 @@ await Profile.create({
 });
 
 await walletService.createWallet(user._id);
+
+// Generate this user's own referral number
+await referralService.createUserReferralCode(
+  user._id
+);
+
+// Complete referral if supplied
+if (referrer) {
+
+  const referral =
+    await referralService.complete(
+      data.referralCode,
+      user._id
+    );
+
+  // Existing member reward
+  await referralService.rewardReferrer(
+    referral.id
+  );
+
+  // New member reward
+  await referralService.rewardReferredUser(
+    referral.id
+  );
+}
 
 // Get selected plan
 const selectedPlan =
@@ -316,7 +370,33 @@ async verifyEmail(token) {
     user.verified = true;
 
     await user.save();
+// ==========================================
+// REFERRAL REWARD
+// ==========================================
 
+try {
+
+    const referralService =
+        require("../referral/referral.service");
+
+    const referralResult =
+        await referralService.rewardReferral(
+            user._id
+        );
+
+    console.log(
+        "🎁 REFERRAL RESULT:",
+        referralResult
+    );
+
+} catch (referralError) {
+
+    console.error(
+        "❌ REFERRAL REWARD ERROR:",
+        referralError
+    );
+
+}
     await EmailVerification.deleteOne({
         _id: record._id
     });
@@ -327,7 +407,9 @@ async verifyEmail(token) {
         success: true,
         message: "Email verified successfully."
     };
+    
 }
+
 
 async resendVerification(email) {
 

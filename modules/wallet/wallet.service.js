@@ -122,6 +122,82 @@ const transactionId =
   };
 };
 
+exports.depositTokens = async (
+  userId,
+  amount,
+  reason = "TOKEN_REWARD"
+) => {
+
+  const wallet =
+    await Wallet.findOne({
+      user: userId
+    });
+
+  if (!wallet) {
+    throw new Error(
+      "Wallet not found"
+    );
+  }
+
+  if (wallet.status !== "active") {
+    throw new Error(
+      "Wallet is not active"
+    );
+  }
+
+  wallet.balance += amount;
+
+  wallet.totalDeposits += amount;
+
+  wallet.lastTransactionAt =
+    new Date();
+
+  await wallet.save();
+
+  const transactionId =
+    `TXN-${Date.now()}-${Math.floor(
+      Math.random() * 100000
+    )}`;
+
+  const transaction =
+    await Transaction.create({
+
+      transactionId,
+
+      wallet: wallet._id,
+
+      user: userId,
+
+      type: "deposit",
+
+      amount,
+
+      status: "completed",
+
+      description: reason
+
+    });
+
+  eventBus.emit(
+    events.FUNDS_DEPOSITED,
+    {
+      userId,
+      amount,
+      reason
+    }
+  );
+
+  return {
+    wallet:
+      walletMapper.toDTO(wallet),
+
+    transaction:
+      transactionMapper.toDTO(
+        transaction
+      )
+  };
+};
+
 exports.withdraw =
 async (
   userId,
