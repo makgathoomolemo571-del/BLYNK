@@ -129,7 +129,7 @@ if (suppliedReferralCode) {
     marketingConsent:data.marketingConsent,
 
  // REFERRAL
-referralCode: newReferralCode,
+referralCode: null,
 
     referredBy: referrer
         ? referrer._id
