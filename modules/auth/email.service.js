@@ -141,15 +141,15 @@ const subscription =
 const role =
     user.role || "member";
 
-const referralNumber =
-    user.referralNumber || "Not available";
+const referralCode =
+    user.referralCode || "Not available";
 
         html = html
            .replace(/{{NAME}}/g, name)
     .replace(/{{USERNAME}}/g, username)
     .replace(/{{SUBSCRIPTION}}/g, subscription)
     .replace(/{{ROLE}}/g, role)
-    .replace(/{{REFERRAL_NUMBER}}/g, referralNumber)
+    .replace(/{{REFERRAL_CODE}}/g, referralCode)
     .replace(/{{VERIFY_URL}}/g, verifyUrl)
     .replace(/{{YEAR}}/g, new Date().getFullYear());
         
