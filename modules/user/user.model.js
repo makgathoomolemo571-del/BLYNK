@@ -119,12 +119,7 @@ const userSchema = new mongoose.Schema(
         ref:"Creator"
     },
 
-    referralNumber: {
-    type: String,
-    unique: true,
-    index: true
-},
-
+    
 referralCode: {
   type: String,
   unique: true,

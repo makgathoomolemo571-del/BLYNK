@@ -13,6 +13,7 @@ sendNotification
 =
 require("../notification/notification.helper");
 const PasswordReset = require("./passwordReset.model");
+const Referral = require("../referral/referral.model");
 const referralService =
   require("../referral/referral.service");
 const emailService = require("./email.service");
@@ -54,23 +55,22 @@ console.log("PLAN:", data.plan);
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 
-   let referrer = null;
+  let referrer = null;
 
-if (data.referralCode) {
+const referralCode =
+    data.referralCode?.trim().toUpperCase() || null;
 
-  referrer =
-    await User.findOne({
-      referralCode:
-        data.referralCode
-          .trim()
-          .toUpperCase()
+if (referralCode) {
+
+    referrer = await User.findOne({
+        referralCode
     });
 
-  if (!referrer) {
-    throw new Error(
-      "Invalid referral number"
-    );
-  }
+    if (!referrer) {
+        throw new Error(
+            "Invalid referral number"
+        );
+    }
 }
 
     const user = await User.create({
@@ -115,13 +115,11 @@ if (data.referralCode) {
     marketingConsent:data.marketingConsent,
 
 // REFERRAL
-    referralCode: referralCode,
+    referredBy: referrer
+    ? referrer._id
+    : null,
 
-    referredBy: referringUser
-        ? referringUser._id
-        : null,
-
-    referralRewarded: false
+referralRewarded: false
 
 });
 
@@ -133,18 +131,24 @@ await Profile.create({
 await walletService.createWallet(user._id);
 
 // Generate this user's own referral number
-await referralService.createUserReferralCode(
-  user._id
-);
+const userReferral =
+    await referralService.create(user._id);
+
+user.referralCode =
+    userReferral.code;
+
+await user.save();
 
 // Complete referral if supplied
 if (referrer) {
 
-  const referral =
-    await referralService.complete(
-      data.referralCode,
-      user._id
-    );
+    const referral =
+        await referralService.complete(
+            referralCode,
+            user._id
+        );
+
+    
 
   // Existing member reward
   await referralService.rewardReferrer(
@@ -155,6 +159,10 @@ if (referrer) {
   await referralService.rewardReferredUser(
     referral.id
   );
+console.log(
+        "REFERRAL COMPLETED:",
+        referral
+    );
 }
 
 // Get selected plan
