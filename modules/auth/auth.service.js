@@ -129,7 +129,9 @@ if (suppliedReferralCode) {
     marketingConsent:data.marketingConsent,
 
  // REFERRAL
-referredBy: referrer
+referralCode: newReferralCode,
+
+    referredBy: referrer
         ? referrer._id
         : null,
 
@@ -148,14 +150,15 @@ await walletService.createWallet(user._id);
 // CREATE THIS USER'S OWN REFERRAL NUMBER
 // =====================================================
 
-const generatedReferralCode =
-    await referralService.createUserReferralCode(
-        user._id
-    );
+const newReferralCode =
+    "BL" +
+    crypto.randomBytes(4)
+        .toString("hex")
+        .toUpperCase();
 
 console.log(
-    "🎟️ USER REFERRAL NUMBER:",
-    generatedReferralCode
+    "GENERATED REFERRAL CODE:",
+    newReferralCode
 );
 
 // =====================================================
