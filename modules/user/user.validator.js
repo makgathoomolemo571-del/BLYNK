@@ -21,7 +21,13 @@ const registerSchema = Joi.object({
       "business"
     )
     .optional(),
-    
+
+  referralCode: Joi.string()
+    .trim()
+    .uppercase()
+    .max(50)
+    .allow("")
+    .optional()
 });
 
 const updateUserSchema = Joi.object({
@@ -40,7 +46,6 @@ const updateUserSchema = Joi.object({
     "superadmin"
   ),
 
-  
   verified: Joi.boolean(),
 
   status: Joi.string().valid(
