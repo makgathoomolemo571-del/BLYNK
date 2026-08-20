@@ -26,6 +26,12 @@ const RefreshToken = require("../auth/refreshToken.model");
 // FIX: either create or remove events
 const { emitUserRegistered, emitUserLoggedIn } = require("../auth/auth.events");
 
+function generateReferralCode() {
+    return "BLYNK-" +
+        crypto.randomBytes(4)
+            .toString("hex")
+            .toUpperCase();
+}
 
 class AuthService {
 
@@ -55,28 +61,49 @@ console.log("PLAN:", data.plan);
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 
-  let referrer = null;
+     let referrer = null;
 
-  const referralCode =
-    data.referralCode
-      ? data.referralCode.trim().toUpperCase()
-      : null;
+    const suppliedReferralCode =
+        data.referralCode
+            ?.trim()
+            .toUpperCase() || null;
 
+    if (suppliedReferralCode) {
 
-  // Only check referral if user entered one
-  if (referralCode) {
+        referrer = await User.findOne({
+            referralCode: suppliedReferralCode
+        });
 
-    referrer =
-      await User.findOne({
-        referralCode
-      });
+        if (!referrer) {
+            throw new Error(
+                "Invalid referral number"
+            );
+        }
 
-    if (!referrer) {
-      throw new Error(
-        "Invalid referral number"
-      );
+        console.log(
+            "REFERRER FOUND:",
+            referrer.username
+        );
     }
-  }
+
+
+    let newReferralCode;
+
+    do {
+
+        newReferralCode =
+            generateReferralCode();
+
+    } while (
+        await User.exists({
+            referralCode: newReferralCode
+        })
+    );
+
+    console.log(
+        "NEW USER REFERRAL CODE:",
+        newReferralCode
+    );
 
 
     const user = await User.create({
@@ -119,12 +146,14 @@ console.log("PLAN:", data.plan);
     acceptPrivacy:data.acceptPrivacy,
 
     marketingConsent:data.marketingConsent,
-  referredBy:
-        referrer
-          ? referrer._id
-          : null,
 
-      referralRewarded: false
+ referralCode: newReferralCode,
+
+        referredBy: referrer
+            ? referrer._id
+            : null,
+
+        referralRewarded: false
 
 });
 
@@ -135,21 +164,45 @@ await Profile.create({
 
 await walletService.createWallet(user._id);
 
-const generatedReferralCode =
-    await referralService.createUserReferralCode(
-      user._id
-    );
+    if (referrer) {
 
-    
-if (referrer && referralCode) {
+        await Referral.create({
 
-    await referralService.complete(
-      referralCode,
-      user._id
-    );
+            referrer: referrer._id,
 
-  }
+            referredUser: user._id,
 
+            code: suppliedReferralCode,
+
+            status: "completed",
+
+            referrerReward: {
+
+                tokens: 1000,
+
+                points: 10,
+
+                rewardGiven: false
+
+            },
+
+            referredUserReward: {
+
+                tokens: 500,
+
+                points: 5,
+
+                rewardGiven: false
+
+            }
+
+        });
+
+        console.log(
+            "REFERRAL COMPLETED:",
+            suppliedReferralCode
+        );
+    }
 
 // Get selected plan
 const selectedPlan =
