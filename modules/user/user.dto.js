@@ -14,14 +14,21 @@ class UserDTO {
         phone,
         country,
         province,
-        city
+        city,
+
+        // REFERRAL
+        referralCode,
+        referredBy,
+        referralRewarded
     }) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.role = role;
+
         this.verified = verified;
         this.emailVerified = emailVerified;
+
         this.status = status;
         this.createdAt = createdAt;
 
@@ -33,9 +40,11 @@ class UserDTO {
         this.country = country;
         this.province = province;
         this.city = city;
-        this.referralCode = referralCode;
-        this.referredBy = referredBy;
-        this.referralRewarded = referralRewarded;
+
+        // REFERRAL
+        this.referralCode = referralCode || null;
+        this.referredBy = referredBy || null;
+        this.referralRewarded = Boolean(referralRewarded);
     }
 }
 

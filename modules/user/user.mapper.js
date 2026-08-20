@@ -42,12 +42,12 @@ const toUserDTO = (user) => {
         province: user.province,
 
         city: user.city,
-        referralCode: user.referralCode,
+     // REFERRAL
+  referralCode: user.referralCode || null,
+  referredBy: user.referredBy || null,
+  referralRewarded: user.referralRewarded || false,
 
-  referredBy: user.referredBy,
-
-  referralRewarded: user.referralRewarded,
-    });
+    });    
 };
 
 module.exports = {
