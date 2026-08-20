@@ -38,6 +38,7 @@ const updateUserSchema = Joi.object({
     "admin",
     "superadmin"
   ),
+  
   referralCode: z
     .string()
     .trim()

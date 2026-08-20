@@ -85,12 +85,12 @@ const registerValidator = Joi.object({
 
     marketingConsent: Joi.boolean()
         .default(false),
-
-        referralCode: Joi.string()
+        
+        referralCode: z
     .string()
     .trim()
     .optional()
-    .or(Joi.literal("")),
+    .or(z.literal("")),
 
 });
 
