@@ -129,13 +129,12 @@ if (suppliedReferralCode) {
     marketingConsent:data.marketingConsent,
 
  // REFERRAL
-referralCode: null,
-
 referredBy: referrer
-    ? referrer._id
-    : null,
+        ? referrer._id
+        : null,
 
-referralRewarded: false
+    referralRewarded: false
+
 });
 
 await Profile.create({
@@ -149,14 +148,14 @@ await walletService.createWallet(user._id);
 // CREATE THIS USER'S OWN REFERRAL NUMBER
 // =====================================================
 
-const userReferralCode =
+const generatedReferralCode =
     await referralService.createUserReferralCode(
         user._id
     );
 
 console.log(
-    "✅ USER REFERRAL NUMBER:",
-    userReferralCode
+    "🎟️ USER REFERRAL NUMBER:",
+    generatedReferralCode
 );
 
 // =====================================================
@@ -165,17 +164,20 @@ console.log(
 
 if (referrer) {
 
+    console.log(
+        "🤝 REFERRAL CODE USED:",
+        data.referralCode
+    );
+
     await referralService.complete(
-        suppliedReferralCode,
+        data.referralCode,
         user._id
     );
 
     console.log(
-        "✅ REFERRAL LINKED:",
-        suppliedReferralCode
+        "✅ REFERRAL SUCCESSFULLY RECORDED"
     );
 }
-
 // Get selected plan
 const selectedPlan =
     plans[data.plan] || plans.FREE_MEMBER;
