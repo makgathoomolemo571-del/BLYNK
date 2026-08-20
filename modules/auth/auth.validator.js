@@ -1,5 +1,5 @@
 const Joi = require("joi");
-
+const { z } = require("zod");
 const registerValidator = Joi.object({
 
     firstName: Joi.string().trim().min(2).max(50).required(),
