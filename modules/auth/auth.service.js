@@ -128,13 +128,7 @@ if (suppliedReferralCode) {
 
     marketingConsent:data.marketingConsent,
 
- // REFERRAL
-referralCode: null,
-
-    referredBy: referrer
-        ? referrer._id
-        : null,
-
+  referredBy: null,
     referralRewarded: false
 
 });
@@ -146,29 +140,26 @@ await Profile.create({
 
 await walletService.createWallet(user._id);
 
-    // =====================================================
-// CREATE THIS USER'S OWN REFERRAL NUMBER
-// =====================================================
+// ==========================================
+// GENERATE USER'S OWN REFERRAL NUMBER
+// ==========================================
 
-const newReferralCode =
-    "BL" +
-    crypto.randomBytes(4)
-        .toString("hex")
-        .toUpperCase();
+const generatedReferralCode =
+    await referralService.createUserReferralCode(user._id);
 
 console.log(
     "GENERATED REFERRAL CODE:",
-    newReferralCode
+    generatedReferralCode
 );
 
-// =====================================================
-// COMPLETE REFERRAL IF USER ENTERED ONE
-// =====================================================
+// ==========================================
+// COMPLETE REFERRAL IF ONE WAS PROVIDED
+// ==========================================
 
-if (referrer) {
+if (data.referralCode && data.referralCode.trim() !== "") {
 
     console.log(
-        "🤝 REFERRAL CODE USED:",
+        "REFERRAL CODE PROVIDED:",
         data.referralCode
     );
 
@@ -178,7 +169,13 @@ if (referrer) {
     );
 
     console.log(
-        "✅ REFERRAL SUCCESSFULLY RECORDED"
+        "✅ REFERRAL COMPLETED FOR:",
+        user.username
+    );
+} else {
+
+    console.log(
+        "ℹ️ NO REFERRAL CODE PROVIDED"
     );
 }
 // Get selected plan
