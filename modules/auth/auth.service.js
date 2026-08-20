@@ -147,14 +147,14 @@ console.log("PLAN:", data.plan);
 
     marketingConsent:data.marketingConsent,
 
- referralCode: newReferralCode,
+ // REFERRAL
+referralCode: null,
 
-        referredBy: referrer
-            ? referrer._id
-            : null,
+referredBy: referrer
+    ? referrer._id
+    : null,
 
-        referralRewarded: false
-
+referralRewarded: false
 });
 
 await Profile.create({
