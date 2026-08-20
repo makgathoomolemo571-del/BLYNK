@@ -1,142 +1,85 @@
-const crypto = require("crypto");
-
 const Referral = require("./referral.model");
 const User = require("../user/user.model");
 
-const events =
-  require("./referral.events");
+const events = require("./referral.events");
+const eventBus = require("../../shared/eventBus");
+const mapper = require("./referral.mapper");
 
-const eventBus =
-  require("../../shared/eventBus");
+function generateReferralCode() {
+  return (
+    "BLK" +
+    Math.random().toString(36).substring(2, 8).toUpperCase()
+  );
+}
 
-const mapper =
-  require("./referral.mapper");
+async function generateUniqueReferralCode() {
+  let code;
+  let exists = true;
 
+  while (exists) {
+    code = generateReferralCode();
+
+    exists = await User.exists({
+      referralCode: code
+    });
+  }
+
+  return code;
+}
 
 module.exports = {
 
-  /*
-  ==========================================
-  GENERATE UNIQUE REFERRAL CODE
-  ==========================================
-  */
-
-  async generateCode(username) {
-
-    const cleanUsername =
-      String(username || "USER")
-        .replace(/[^a-zA-Z0-9]/g, "")
-        .substring(0, 12)
-        .toUpperCase();
-
-    let code;
-    let exists = true;
-
-    while (exists) {
-
-      const random =
-        crypto
-          .randomBytes(3)
-          .toString("hex")
-          .toUpperCase();
-
-      code =
-        `BLYNK-${cleanUsername}-${random}`;
-
-      exists =
-        await User.exists({
-          referralCode: code
-        });
-    }
-
-    return code;
-  },
-
-
-  /*
-  ==========================================
-  CREATE USER REFERRAL CODE
-  ==========================================
-  */
+  // ==========================================
+  // CREATE USER'S OWN REFERRAL NUMBER
+  // ==========================================
 
   async createUserReferralCode(userId) {
 
-    const user =
-      await User.findById(userId);
+    const user = await User.findById(userId);
 
     if (!user) {
-      throw new Error(
-        "User not found"
-      );
+      throw new Error("User not found");
     }
 
+    // Already has one
     if (user.referralCode) {
       return user.referralCode;
     }
 
     const code =
-      await this.generateCode(
-        user.username
-      );
+      await generateUniqueReferralCode();
 
     user.referralCode = code;
 
     await user.save();
 
+    console.log(
+      "✅ REFERRAL CODE CREATED:",
+      code
+    );
+
     return code;
   },
 
 
-  /*
-  ==========================================
-  CREATE REFERRAL
-  ==========================================
-  */
+  // ==========================================
+  // COMPLETE REFERRAL
+  // ==========================================
 
-  async create(referrerId, code) {
+  async complete(code, referredUserId) {
 
-    const referral =
-      await Referral.create({
-
-        referrer: referrerId,
-
-        referredUser: null,
-
-        code
-
-      });
-
-    eventBus.emit(
-      events.REFERRAL_CREATED,
-      referral
-    );
-
-    return mapper.toDTO(
-      referral
-    );
-  },
-
-
-  /*
-  ==========================================
-  COMPLETE REFERRAL
-  ==========================================
-  */
-
-  async complete(
-    code,
-    referredUserId
-  ) {
+    if (!code) {
+      throw new Error(
+        "Referral code is required"
+      );
+    }
 
     const normalizedCode =
-      code
-        .trim()
-        .toUpperCase();
+      code.trim().toUpperCase();
 
     const referrer =
       await User.findOne({
-        referralCode:
-          normalizedCode
+        referralCode: normalizedCode
       });
 
     if (!referrer) {
@@ -145,6 +88,7 @@ module.exports = {
       );
     }
 
+    // Prevent self referral
     if (
       referrer._id.toString() ===
       referredUserId.toString()
@@ -154,23 +98,22 @@ module.exports = {
       );
     }
 
-    const alreadyReferred =
+    // Prevent duplicate referral
+    const existing =
       await Referral.findOne({
-        referredUser:
-          referredUserId
+        referredUser: referredUserId
       });
 
-    if (alreadyReferred) {
+    if (existing) {
       throw new Error(
-        "This user has already used a referral number"
+        "User has already been referred"
       );
     }
 
     const referral =
       await Referral.create({
 
-        referrer:
-          referrer._id,
+        referrer: referrer._id,
 
         referredUser:
           referredUserId,
@@ -179,28 +122,15 @@ module.exports = {
           normalizedCode,
 
         status:
-          "completed",
-
-        referrerReward: {
-          tokens: 1000,
-          points: 10,
-          rewardGiven: false
-        },
-
-        referredUserReward: {
-          tokens: 500,
-          points: 5,
-          rewardGiven: false
-        }
+          "completed"
 
       });
 
-    // Save relationship on new user
+    // Link new user to referrer
     await User.findByIdAndUpdate(
       referredUserId,
       {
-        referredBy:
-          referrer._id
+        referredBy: referrer._id
       }
     );
 
@@ -209,19 +139,20 @@ module.exports = {
       referral
     );
 
-    return mapper.toDTO(
-      referral
+    console.log(
+      "✅ REFERRAL COMPLETED:",
+      normalizedCode
     );
+
+    return mapper.toDTO(referral);
   },
 
 
-  /*
-  ==========================================
-  REFERRER REWARD
-  ==========================================
-  */
+  // ==========================================
+  // REWARD REFERRAL
+  // ==========================================
 
-  async rewardReferrer(id) {
+  async reward(id) {
 
     const referral =
       await Referral.findById(id);
@@ -232,29 +163,29 @@ module.exports = {
       );
     }
 
-    if (
-      referral.referrerReward.rewardGiven
-    ) {
-      return mapper.toDTO(
-        referral
-      );
+    if (referral.rewardGiven) {
+      return mapper.toDTO(referral);
     }
 
-    /*
-      IMPORTANT:
+    // OLD MEMBER
+    referral.referrerReward = {
+      tokens: 1000,
+      points: 10,
+      rewardGiven: true,
+      rewardedAt: new Date()
+    };
 
-      Put your actual BLYNK token/points
-      wallet service call here.
+    // NEW MEMBER
+    referral.referredUserReward = {
+      tokens: 500,
+      points: 5,
+      rewardGiven: true,
+      rewardedAt: new Date()
+    };
 
-      DO NOT use ZAR wallet balance
-      if tokens are a separate currency.
-    */
+    referral.rewardGiven = true;
 
-    referral.referrerReward.rewardGiven =
-      true;
-
-    referral.referrerReward.rewardedAt =
-      new Date();
+    referral.rewardAmount = 1500;
 
     await referral.save();
 
@@ -263,76 +194,18 @@ module.exports = {
       referral
     );
 
-    return mapper.toDTO(
-      referral
+    console.log(
+      "🎁 REFERRAL REWARDED:",
+      referral._id
     );
+
+    return mapper.toDTO(referral);
   },
 
 
-  /*
-  ==========================================
-  NEW MEMBER REWARD
-  ==========================================
-  */
-
-  async rewardReferredUser(id) {
-
-    const referral =
-      await Referral.findById(id);
-
-    if (!referral) {
-      throw new Error(
-        "Referral not found"
-      );
-    }
-
-    if (
-      referral
-        .referredUserReward
-        .rewardGiven
-    ) {
-      return mapper.toDTO(
-        referral
-      );
-    }
-
-    /*
-      NEW MEMBER:
-
-      500 TOKENS
-      5 POINTS
-
-      Connect your existing
-      token/points service here.
-    */
-
-    referral
-      .referredUserReward
-      .rewardGiven = true;
-
-    referral
-      .referredUserReward
-      .rewardedAt =
-        new Date();
-
-    await referral.save();
-
-    eventBus.emit(
-      events.REFERRAL_REWARDED,
-      referral
-    );
-
-    return mapper.toDTO(
-      referral
-    );
-  },
-
-
-  /*
-  ==========================================
-  GET USER REFERRALS
-  ==========================================
-  */
+  // ==========================================
+  // USER REFERRALS
+  // ==========================================
 
   async getUserReferrals(userId) {
 
@@ -342,7 +215,7 @@ module.exports = {
       })
       .populate(
         "referredUser",
-        "username firstName lastName"
+        "username displayName"
       )
       .sort({
         createdAt: -1
@@ -354,11 +227,9 @@ module.exports = {
   },
 
 
-  /*
-  ==========================================
-  STATS
-  ==========================================
-  */
+  // ==========================================
+  // STATS
+  // ==========================================
 
   async stats() {
 
@@ -370,15 +241,15 @@ module.exports = {
         status: "completed"
       });
 
-    const pending =
+    const rewarded =
       await Referral.countDocuments({
-        status: "pending"
+        rewardGiven: true
       });
 
     return {
       total,
       completed,
-      pending
+      rewarded
     };
   }
 
