@@ -12,9 +12,23 @@ module.exports = {
 
     status: ref.status,
 
-    rewardGiven: ref.rewardGiven,
+    referrerReward: {
+      tokens: ref.referrerReward?.tokens || 0,
+      points: ref.referrerReward?.points || 0,
+      rewardGiven:
+        ref.referrerReward?.rewardGiven || false,
+      rewardedAt:
+        ref.referrerReward?.rewardedAt || null
+    },
 
-    rewardAmount: ref.rewardAmount,
+    referredUserReward: {
+      tokens: ref.referredUserReward?.tokens || 0,
+      points: ref.referredUserReward?.points || 0,
+      rewardGiven:
+        ref.referredUserReward?.rewardGiven || false,
+      rewardedAt:
+        ref.referredUserReward?.rewardedAt || null
+    },
 
     createdAt: ref.createdAt
 
