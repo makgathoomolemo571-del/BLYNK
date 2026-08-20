@@ -41,7 +41,12 @@ const toUserDTO = (user) => {
 
         province: user.province,
 
-        city: user.city
+        city: user.city,
+        referralCode: user.referralCode,
+
+  referredBy: user.referredBy,
+
+  referralRewarded: user.referralRewarded,
     });
 };
 

@@ -33,6 +33,9 @@ class UserDTO {
         this.country = country;
         this.province = province;
         this.city = city;
+        this.referralCode = referralCode;
+        this.referredBy = referredBy;
+        this.referralRewarded = referralRewarded;
     }
 }
 
