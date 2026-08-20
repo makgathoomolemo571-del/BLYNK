@@ -57,21 +57,27 @@ console.log("PLAN:", data.plan);
 
   let referrer = null;
 
-const referralCode =
-    data.referralCode?.trim().toUpperCase() || null;
+  const referralCode =
+    data.referralCode
+      ? data.referralCode.trim().toUpperCase()
+      : null;
 
-if (referralCode) {
 
-    referrer = await User.findOne({
+  // Only check referral if user entered one
+  if (referralCode) {
+
+    referrer =
+      await User.findOne({
         referralCode
-    });
+      });
 
     if (!referrer) {
-        throw new Error(
-            "Invalid referral number"
-        );
+      throw new Error(
+        "Invalid referral number"
+      );
     }
-}
+  }
+
 
     const user = await User.create({
 
@@ -113,13 +119,12 @@ if (referralCode) {
     acceptPrivacy:data.acceptPrivacy,
 
     marketingConsent:data.marketingConsent,
+  referredBy:
+        referrer
+          ? referrer._id
+          : null,
 
-// REFERRAL
-    referredBy: referrer
-    ? referrer._id
-    : null,
-
-referralRewarded: false
+      referralRewarded: false
 
 });
 
@@ -130,40 +135,21 @@ await Profile.create({
 
 await walletService.createWallet(user._id);
 
-// Generate this user's own referral number
-const userReferral =
-    await referralService.create(user._id);
-
-user.referralCode =
-    userReferral.code;
-
-await user.save();
-
-// Complete referral if supplied
-if (referrer) {
-
-    const referral =
-        await referralService.complete(
-            referralCode,
-            user._id
-        );
+const generatedReferralCode =
+    await referralService.createUserReferralCode(
+      user._id
+    );
 
     
+if (referrer && referralCode) {
 
-  // Existing member reward
-  await referralService.rewardReferrer(
-    referral.id
-  );
-
-  // New member reward
-  await referralService.rewardReferredUser(
-    referral.id
-  );
-console.log(
-        "REFERRAL COMPLETED:",
-        referral
+    await referralService.complete(
+      referralCode,
+      user._id
     );
-}
+
+  }
+
 
 // Get selected plan
 const selectedPlan =
