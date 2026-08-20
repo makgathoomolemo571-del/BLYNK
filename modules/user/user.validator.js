@@ -21,13 +21,7 @@ const registerSchema = Joi.object({
       "business"
     )
     .optional(),
-    referralCode: Joi.string()
-    .trim()
-    .uppercase()
-    .max(50)
-    .allow("")
-    .optional(),
-
+    
 });
 
 const updateUserSchema = Joi.object({
