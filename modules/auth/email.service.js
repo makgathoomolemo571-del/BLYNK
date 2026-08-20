@@ -142,7 +142,7 @@ const role =
     user.role || "member";
 
 const referralCode =
-    user.referralCode || "BLYNK-F4C73000";
+    user.referralCode;
 
         html = html
            .replace(/{{NAME}}/g, name)
