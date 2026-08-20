@@ -26,12 +26,6 @@ const RefreshToken = require("../auth/refreshToken.model");
 // FIX: either create or remove events
 const { emitUserRegistered, emitUserLoggedIn } = require("../auth/auth.events");
 
-function generateReferralCode() {
-    return "BLYNK-" +
-        crypto.randomBytes(4)
-            .toString("hex")
-            .toUpperCase();
-}
 
 class AuthService {
 
@@ -61,49 +55,36 @@ console.log("PLAN:", data.plan);
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 
-     let referrer = null;
+    // =====================================================
+// OPTIONAL REFERRAL
+// =====================================================
 
-    const suppliedReferralCode =
-        data.referralCode
-            ?.trim()
-            .toUpperCase() || null;
+let referrer = null;
 
-    if (suppliedReferralCode) {
+const suppliedReferralCode =
+    data.referralCode
+        ?.trim()
+        .toUpperCase() || null;
 
-        referrer = await User.findOne({
-            referralCode: suppliedReferralCode
-        });
+if (suppliedReferralCode) {
 
-        if (!referrer) {
-            throw new Error(
-                "Invalid referral number"
-            );
-        }
+    referrer = await User.findOne({
+        referralCode: suppliedReferralCode
+    });
 
-        console.log(
-            "REFERRER FOUND:",
-            referrer.username
+    if (!referrer) {
+        throw new Error(
+            "Invalid referral number"
         );
     }
 
-
-    let newReferralCode;
-
-    do {
-
-        newReferralCode =
-            generateReferralCode();
-
-    } while (
-        await User.exists({
-            referralCode: newReferralCode
-        })
-    );
-
     console.log(
-        "NEW USER REFERRAL CODE:",
-        newReferralCode
+        "✅ REFERRER FOUND:",
+        referrer.username,
+        referrer.referralCode
     );
+}
+
 
 
     const user = await User.create({
@@ -164,45 +145,36 @@ await Profile.create({
 
 await walletService.createWallet(user._id);
 
-    if (referrer) {
+    // =====================================================
+// CREATE THIS USER'S OWN REFERRAL NUMBER
+// =====================================================
 
-        await Referral.create({
+const userReferralCode =
+    await referralService.createUserReferralCode(
+        user._id
+    );
 
-            referrer: referrer._id,
+console.log(
+    "✅ USER REFERRAL NUMBER:",
+    userReferralCode
+);
 
-            referredUser: user._id,
+// =====================================================
+// COMPLETE REFERRAL IF USER ENTERED ONE
+// =====================================================
 
-            code: suppliedReferralCode,
+if (referrer) {
 
-            status: "completed",
+    await referralService.complete(
+        suppliedReferralCode,
+        user._id
+    );
 
-            referrerReward: {
-
-                tokens: 1000,
-
-                points: 10,
-
-                rewardGiven: false
-
-            },
-
-            referredUserReward: {
-
-                tokens: 500,
-
-                points: 5,
-
-                rewardGiven: false
-
-            }
-
-        });
-
-        console.log(
-            "REFERRAL COMPLETED:",
-            suppliedReferralCode
-        );
-    }
+    console.log(
+        "✅ REFERRAL LINKED:",
+        suppliedReferralCode
+    );
+}
 
 // Get selected plan
 const selectedPlan =

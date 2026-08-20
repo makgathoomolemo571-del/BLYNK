@@ -5,12 +5,23 @@ const events = require("./referral.events");
 const eventBus = require("../../shared/eventBus");
 const mapper = require("./referral.mapper");
 
+// =====================================================
+// GENERATE REFERRAL CODE
+// =====================================================
+
 function generateReferralCode() {
   return (
-    "BLK" +
-    Math.random().toString(36).substring(2, 8).toUpperCase()
+    "BLYNK-" +
+    Math.random()
+      .toString(36)
+      .substring(2, 8)
+      .toUpperCase()
   );
 }
+
+// =====================================================
+// GENERATE UNIQUE CODE
+// =====================================================
 
 async function generateUniqueReferralCode() {
   let code;
@@ -27,21 +38,26 @@ async function generateUniqueReferralCode() {
   return code;
 }
 
+// =====================================================
+// REFERRAL SERVICE
+// =====================================================
+
 module.exports = {
 
-  // ==========================================
+  // ===================================================
   // CREATE USER'S OWN REFERRAL NUMBER
-  // ==========================================
+  // ===================================================
 
   async createUserReferralCode(userId) {
 
-    const user = await User.findById(userId);
+    const user =
+      await User.findById(userId);
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Already has one
+    // User already has a referral number
     if (user.referralCode) {
       return user.referralCode;
     }
@@ -54,23 +70,24 @@ module.exports = {
     await user.save();
 
     console.log(
-      "✅ REFERRAL CODE CREATED:",
-      code
+      "✅ REFERRAL NUMBER CREATED:",
+      code,
+      "FOR:",
+      user.username
     );
 
     return code;
   },
 
-
-  // ==========================================
+  // ===================================================
   // COMPLETE REFERRAL
-  // ==========================================
+  // ===================================================
 
   async complete(code, referredUserId) {
 
     if (!code) {
       throw new Error(
-        "Referral code is required"
+        "Referral number is required"
       );
     }
 
@@ -98,7 +115,7 @@ module.exports = {
       );
     }
 
-    // Prevent duplicate referral
+    // Check if this user was already referred
     const existing =
       await Referral.findOne({
         referredUser: referredUserId
@@ -113,7 +130,8 @@ module.exports = {
     const referral =
       await Referral.create({
 
-        referrer: referrer._id,
+        referrer:
+          referrer._id,
 
         referredUser:
           referredUserId,
@@ -122,8 +140,23 @@ module.exports = {
           normalizedCode,
 
         status:
-          "completed"
+          "completed",
 
+        referrerReward: {
+          tokens: 1000,
+          points: 10,
+          rewardGiven: false
+        },
+
+        referredUserReward: {
+          tokens: 500,
+          points: 5,
+          rewardGiven: false
+        },
+
+        rewardAmount: 1500,
+
+        rewardGiven: false
       });
 
     // Link new user to referrer
@@ -147,47 +180,83 @@ module.exports = {
     return mapper.toDTO(referral);
   },
 
+  // ===================================================
+  // REWARD REFERRAL AFTER EMAIL VERIFICATION
+  // ===================================================
 
-  // ==========================================
-  // REWARD REFERRAL
-  // ==========================================
-
-  async reward(id) {
+  async rewardReferral(referredUserId) {
 
     const referral =
-      await Referral.findById(id);
+      await Referral.findOne({
+        referredUser: referredUserId,
+        status: "completed"
+      });
 
+    // No referral = perfectly normal
     if (!referral) {
-      throw new Error(
-        "Referral not found"
+
+      console.log(
+        "ℹ️ NO REFERRAL FOUND FOR USER:",
+        referredUserId
       );
+
+      return null;
     }
 
+    // Already rewarded
     if (referral.rewardGiven) {
+
+      console.log(
+        "ℹ️ REFERRAL ALREADY REWARDED:",
+        referral._id
+      );
+
       return mapper.toDTO(referral);
     }
 
-    // OLD MEMBER
+    // ================================================
+    // HERE IS YOUR REWARD
+    // ================================================
+
     referral.referrerReward = {
+
       tokens: 1000,
+
       points: 10,
+
       rewardGiven: true,
+
       rewardedAt: new Date()
+
     };
 
-    // NEW MEMBER
     referral.referredUserReward = {
+
       tokens: 500,
+
       points: 5,
+
       rewardGiven: true,
+
       rewardedAt: new Date()
+
     };
 
     referral.rewardGiven = true;
 
+    referral.rewardedAt = new Date();
+
     referral.rewardAmount = 1500;
 
     await referral.save();
+
+    // Mark new user's referral reward as given
+    await User.findByIdAndUpdate(
+      referredUserId,
+      {
+        referralRewarded: true
+      }
+    );
 
     eventBus.emit(
       events.REFERRAL_REWARDED,
@@ -195,17 +264,23 @@ module.exports = {
     );
 
     console.log(
-      "🎁 REFERRAL REWARDED:",
-      referral._id
+      "🎁 REFERRAL REWARDED"
+    );
+
+    console.log(
+      "OLD MEMBER: 1000 TOKENS / 10 POINTS"
+    );
+
+    console.log(
+      "NEW MEMBER: 500 TOKENS / 5 POINTS"
     );
 
     return mapper.toDTO(referral);
   },
 
-
-  // ==========================================
+  // ===================================================
   // USER REFERRALS
-  // ==========================================
+  // ===================================================
 
   async getUserReferrals(userId) {
 
@@ -215,7 +290,7 @@ module.exports = {
       })
       .populate(
         "referredUser",
-        "username displayName"
+        "username displayName email"
       )
       .sort({
         createdAt: -1
@@ -226,10 +301,9 @@ module.exports = {
     );
   },
 
-
-  // ==========================================
+  // ===================================================
   // STATS
-  // ==========================================
+  // ===================================================
 
   async stats() {
 
@@ -246,10 +320,21 @@ module.exports = {
         rewardGiven: true
       });
 
+    const pending =
+      await Referral.countDocuments({
+        status: "pending"
+      });
+
     return {
+
       total,
+
       completed,
+
+      pending,
+
       rewarded
+
     };
   }
 
