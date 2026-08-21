@@ -13,9 +13,7 @@ sendNotification
 =
 require("../notification/notification.helper");
 const PasswordReset = require("./passwordReset.model");
-const Referral = require("../referral/referral.model");
-const referralService =
-  require("../referral/referral.service");
+
 const emailService = require("./email.service");
 
 const User = require("../user/user.model");
@@ -128,7 +126,10 @@ if (suppliedReferralCode) {
 
     marketingConsent:data.marketingConsent,
 
-  referredBy: null,
+   referredBy: referrer
+        ? referrer._id
+        : null,
+
     referralRewarded: false
 
 });
@@ -140,44 +141,6 @@ await Profile.create({
 
 await walletService.createWallet(user._id);
 
-// ==========================================
-// GENERATE USER'S OWN REFERRAL NUMBER
-// ==========================================
-
-const generatedReferralCode =
-    await referralService.createUserReferralCode(user._id);
-
-console.log(
-    "GENERATED REFERRAL CODE:",
-    generatedReferralCode
-);
-
-// ==========================================
-// COMPLETE REFERRAL IF ONE WAS PROVIDED
-// ==========================================
-
-if (data.referralCode && data.referralCode.trim() !== "") {
-
-    console.log(
-        "REFERRAL CODE PROVIDED:",
-        data.referralCode
-    );
-
-    await referralService.complete(
-        data.referralCode,
-        user._id
-    );
-
-    console.log(
-        "✅ REFERRAL COMPLETED FOR:",
-        user.username
-    );
-} else {
-
-    console.log(
-        "ℹ️ NO REFERRAL CODE PROVIDED"
-    );
-}
 // Get selected plan
 const selectedPlan =
     plans[data.plan] || plans.FREE_MEMBER;
