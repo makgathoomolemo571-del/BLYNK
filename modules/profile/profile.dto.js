@@ -13,9 +13,13 @@ class ProfileDTO {
         verified: data.user.verified,
         emailVerified: data.user.emailVerified,
         profilePicture: data.user.profilePicture,
-      coverBanner: data.user.coverBanner
+      coverBanner: data.user.coverBanner,
+      referralCode: data.user.referralCode
       }
     : null;
+
+    this.referralCode =
+    data.user?.referralCode || null;
 
 this.subscriptionPlan =
     data.user?.subscriptionPlan || null;

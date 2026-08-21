@@ -97,7 +97,7 @@ exports.getProfileById = async (userId) => {
   const profile = await Profile.findOne({ user: userId })
 .populate(
     "user",
-    "username displayName role subscriptionPlan verified emailVerified profilePicture coverBanner"
+    "username displayName role subscriptionPlan verified emailVerified profilePicture coverBanner referralCode"
 );
 
   if (!profile) {
