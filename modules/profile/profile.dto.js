@@ -14,12 +14,20 @@ class ProfileDTO {
         emailVerified: data.user.emailVerified,
         profilePicture: data.user.profilePicture,
       coverBanner: data.user.coverBanner,
-      referralCode: data.user.referralCode
+      referralCode: data.user.referralCode || null,
+      referredBy: data.user.referredBy || null,
       }
     : null;
 
-    this.referralCode =
-    data.user?.referralCode || null;
+   this.referralCode =
+  data.referralCode ||
+  data.user?.referralCode ||
+  null;
+
+this.referredBy =
+  data.referredBy ||
+  data.user?.referredBy ||
+  null;
 
 this.subscriptionPlan =
     data.user?.subscriptionPlan || null;
