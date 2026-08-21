@@ -148,7 +148,7 @@ const ownReferralCode =
     await referralService.createUserReferralCode(
         user._id
     );
-
+const updatedUser = await User.findById(user._id);
 console.log(
     "✅ USER REFERRAL NUMBER:",
     ownReferralCode
@@ -265,7 +265,7 @@ if (requireVerification && !user.emailVerified) {
     return {
 success: true,
     message: "Please verify your email. A new verification email has been sent.",
-    referralCode: user.referralCode,
+    referralCode: updatedUser.referralCode,
      user: {
         id: user._id,
         firstName: user.firstName,

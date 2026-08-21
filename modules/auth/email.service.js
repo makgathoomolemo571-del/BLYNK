@@ -150,7 +150,7 @@ const referralCode =
     .replace(/{{USERNAME}}/g, username)
     .replace(/{{SUBSCRIPTION}}/g, subscription)
     .replace(/{{ROLE}}/g, role)
-    .replace(/{{REFERRAL_CODE}}/g,  user.referralCode || "")
+    .replace(/{{REFERRAL_CODE}}/g, referralCode)
     .replace(/{{VERIFY_URL}}/g, verifyUrl)
     .replace(/{{YEAR}}/g, new Date().getFullYear());
         
