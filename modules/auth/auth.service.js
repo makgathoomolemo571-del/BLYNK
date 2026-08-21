@@ -18,9 +18,6 @@ const emailService = require("./email.service");
 
 const User = require("../user/user.model");
 
-const referralService =
-    require("../referral/referral.service");
-
 // FIX PATH (most likely correct)
 const RefreshToken = require("../auth/refreshToken.model");
 
@@ -55,38 +52,6 @@ console.log("PLAN:", data.plan);
     }
 
     const passwordHash = await bcrypt.hash(data.password, 10);
-
-    // =====================================================
-// OPTIONAL REFERRAL
-// =====================================================
-
-let referrer = null;
-
-const suppliedReferralCode =
-    data.referralCode
-        ?.trim()
-        .toUpperCase() || null;
-
-if (suppliedReferralCode) {
-
-    referrer = await User.findOne({
-        referralCode: suppliedReferralCode
-    });
-
-    if (!referrer) {
-        throw new Error(
-            "Invalid referral number"
-        );
-    }
-
-    console.log(
-        "✅ REFERRER FOUND:",
-        referrer.username,
-        referrer.referralCode
-    );
-}
-
-
 
     const user = await User.create({
 
@@ -127,13 +92,8 @@ if (suppliedReferralCode) {
 
     acceptPrivacy:data.acceptPrivacy,
 
-    marketingConsent:data.marketingConsent,
+    marketingConsent:data.marketingConsent
 
-   referredBy: referrer
-        ? referrer._id
-        : null,
-
-    referralRewarded: false
 
 });
 
@@ -143,37 +103,6 @@ await Profile.create({
 });
 
 await walletService.createWallet(user._id);
-
-const ownReferralCode =
-    await referralService.createUserReferralCode(
-        user._id
-    );
-const updatedUser = await User.findById(user._id);
-console.log(
-    "✅ USER REFERRAL NUMBER:",
-    ownReferralCode
-);
-
-
-let referralRecord = null;
-
-if (suppliedReferralCode) {
-
-    console.log(
-        "🎁 CREATING REFERRAL RECORD"
-    );
-
-    referralRecord =
-        await referralService.complete(
-            suppliedReferralCode,
-            user._id
-        );
-
-    console.log(
-        "✅ REFERRAL RECORD CREATED:",
-        referralRecord
-    );
-}
 
 // Get selected plan
 const selectedPlan =
