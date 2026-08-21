@@ -141,6 +141,39 @@ await Profile.create({
 
 await walletService.createWallet(user._id);
 
+
+
+if (referrer) {
+
+    console.log("=================================");
+    console.log("🎁 REFERRAL DETECTED");
+    console.log("REFERRER:", referrer.username);
+    console.log("REFERRER ID:", referrer._id);
+    console.log("NEW USER:", user.username);
+    console.log("NEW USER ID:", user._id);
+    console.log("=================================");
+
+    // REFERRER: 1000 TOKENS = 10 POINTS
+    // NEW USER: 500 TOKENS = 5 POINTS
+
+    await walletService.addReferralReward(
+        referrer._id,
+        1000,
+        10
+    );
+
+    await walletService.addReferralReward(
+        user._id,
+        500,
+        5
+    );
+
+    user.referralRewarded = true;
+
+    await user.save();
+
+    console.log("✅ REFERRAL REWARDS GIVEN");
+}
 // Get selected plan
 const selectedPlan =
     plans[data.plan] || plans.FREE_MEMBER;
