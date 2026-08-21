@@ -18,6 +18,9 @@ const emailService = require("./email.service");
 
 const User = require("../user/user.model");
 
+const referralService =
+    require("../referral/referral.service");
+
 // FIX PATH (most likely correct)
 const RefreshToken = require("../auth/refreshToken.model");
 
@@ -141,39 +144,37 @@ await Profile.create({
 
 await walletService.createWallet(user._id);
 
-
-
-if (referrer) {
-
-    console.log("=================================");
-    console.log("🎁 REFERRAL DETECTED");
-    console.log("REFERRER:", referrer.username);
-    console.log("REFERRER ID:", referrer._id);
-    console.log("NEW USER:", user.username);
-    console.log("NEW USER ID:", user._id);
-    console.log("=================================");
-
-    // REFERRER: 1000 TOKENS = 10 POINTS
-    // NEW USER: 500 TOKENS = 5 POINTS
-
-    await walletService.addReferralReward(
-        referrer._id,
-        1000,
-        10
+const ownReferralCode =
+    await referralService.createUserReferralCode(
+        user._id
     );
 
-    await walletService.addReferralReward(
-        user._id,
-        500,
-        5
+console.log(
+    "✅ USER REFERRAL NUMBER:",
+    ownReferralCode
+);
+
+
+let referralRecord = null;
+
+if (suppliedReferralCode) {
+
+    console.log(
+        "🎁 CREATING REFERRAL RECORD"
     );
 
-    user.referralRewarded = true;
+    referralRecord =
+        await referralService.complete(
+            suppliedReferralCode,
+            user._id
+        );
 
-    await user.save();
-
-    console.log("✅ REFERRAL REWARDS GIVEN");
+    console.log(
+        "✅ REFERRAL RECORD CREATED:",
+        referralRecord
+    );
 }
+
 // Get selected plan
 const selectedPlan =
     plans[data.plan] || plans.FREE_MEMBER;

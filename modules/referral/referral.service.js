@@ -186,6 +186,149 @@ module.exports = {
         return mapper.toDTO(referral);
     },
 
+    // =====================================================
+// REWARD REFERRAL AFTER EMAIL VERIFICATION
+// =====================================================
+
+async rewardReferral(referredUserId) {
+
+    console.log(
+        "🎁 REWARD REFERRAL FOR:",
+        referredUserId.toString()
+    );
+
+    const referral =
+        await Referral.findOne({
+            referredUser: referredUserId,
+            status: "completed"
+        });
+
+    if (!referral) {
+
+        console.log(
+            "ℹ️ NO REFERRAL FOUND FOR USER"
+        );
+
+        return {
+            rewarded: false,
+            message: "No referral found"
+        };
+    }
+
+
+    // =================================================
+    // PREVENT DOUBLE REWARD
+    // =================================================
+
+    if (
+        referral.referrerReward.rewardGiven &&
+        referral.referredUserReward.rewardGiven
+    ) {
+
+        console.log(
+            "⚠️ REFERRAL ALREADY REWARDED"
+        );
+
+        return {
+            rewarded: false,
+            alreadyRewarded: true,
+            message: "Referral already rewarded"
+        };
+    }
+
+
+    // =================================================
+    // LOAD WALLET SERVICE
+    // =================================================
+
+    const walletService =
+        require("../wallet/wallet.service");
+
+
+    // =================================================
+    // REWARD REFERRER
+    // =================================================
+
+    if (
+        !referral.referrerReward.rewardGiven
+    ) {
+
+        await walletService.addReferralReward(
+            referral.referrer,
+            referral.referrerReward.tokens,
+            referral.referrerReward.points
+        );
+
+        referral.referrerReward.rewardGiven =
+            true;
+
+        referral.referrerReward.rewardedAt =
+            new Date();
+
+        console.log(
+            "✅ REFERRER REWARDED:",
+            referral.referrer.toString()
+        );
+    }
+
+
+    // =================================================
+    // REWARD NEW USER
+    // =================================================
+
+    if (
+        !referral.referredUserReward.rewardGiven
+    ) {
+
+        await walletService.addReferralReward(
+            referral.referredUser,
+            referral.referredUserReward.tokens,
+            referral.referredUserReward.points
+        );
+
+        referral.referredUserReward.rewardGiven =
+            true;
+
+        referral.referredUserReward.rewardedAt =
+            new Date();
+
+        console.log(
+            "✅ REFERRED USER REWARDED:",
+            referral.referredUser.toString()
+        );
+    }
+
+
+    // =================================================
+    // SAVE REFERRAL
+    // =================================================
+
+    await referral.save();
+
+
+    // =================================================
+    // MARK USER AS REWARDED
+    // =================================================
+
+    await User.findByIdAndUpdate(
+        referredUserId,
+        {
+            referralRewarded: true
+        }
+    );
+
+
+    console.log(
+        "🎉 REFERRAL REWARDS COMPLETED"
+    );
+
+
+    return {
+        rewarded: true,
+        referral: mapper.toDTO(referral)
+    };
+},
+
 
     // =====================================================
     // GET USER REFERRALS
