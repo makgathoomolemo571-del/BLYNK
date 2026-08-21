@@ -83,6 +83,22 @@ location: {
       default: "public"
     },
 
+    referralCode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    uppercase: true,
+    trim: true,
+    index: true
+},
+
+referredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+    index: true
+},
+
     showEmail: {
       type: Boolean,
       default: false
