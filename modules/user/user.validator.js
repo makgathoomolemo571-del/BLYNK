@@ -52,7 +52,13 @@ const updateUserSchema = Joi.object({
     "active",
     "suspended",
     "banned"
-  )
+  ),
+  referralCode: Joi.string()
+    .trim()
+    .uppercase()
+    .max(50)
+    .allow("")
+    .optional()
 });
 
 module.exports = {
