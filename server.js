@@ -187,7 +187,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/advertisements", advertisementRoutes);
 app.use("/api/audit", auditRoutes);
 app.use("/api/payments", paymentRoutes);
-app.use("/api/referrals", referralRoutes);
+app.use("/api/referral", referralRoutes);
 app.use("/api/rewards", rewardRoutes);
 app.use("/api/studio", studioRoutes);
 app.use("/api/monetization",monetizationRoutes);
