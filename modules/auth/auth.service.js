@@ -194,7 +194,7 @@ if (requireVerification && !user.emailVerified) {
     return {
 success: true,
     message: "Please verify your email. A new verification email has been sent.",
-    referralCode: updatedUser.referralCode,
+   
      user: {
         id: user._id,
         firstName: user.firstName,
@@ -204,7 +204,7 @@ success: true,
         email: user.email,
         role: user.role,
         subscriptionPlan: user.subscriptionPlan,
-        referralCode: user.referralCode
+        
     }
         
     };
