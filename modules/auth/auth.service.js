@@ -123,7 +123,7 @@ if (suppliedReferralCode) {
 
     acceptPrivacy:data.acceptPrivacy,
 
-    marketingConsent:data.marketingConsent
+    marketingConsent:data.marketingConsent,
 
     referredBy: referrer
     ? referrer._id
