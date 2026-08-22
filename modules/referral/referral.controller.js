@@ -1,19 +1,34 @@
 const service = require("./referral.service");
 
+
 // =====================================================
 // GENERATE MY REFERRAL NUMBER
 // =====================================================
 
 exports.generate = async (req, res, next) => {
+
     try {
 
         const userId =
             req.user.userId ||
+            req.user.id ||
             req.user._id;
 
         console.log(
-            "GENERATE REFERRAL FOR:",
+            "================================="
+        );
+
+        console.log(
+            "🎁 GENERATE REFERRAL"
+        );
+
+        console.log(
+            "USER ID:",
             userId
+        );
+
+        console.log(
+            "================================="
         );
 
         const referralCode =
@@ -32,7 +47,7 @@ exports.generate = async (req, res, next) => {
     } catch (err) {
 
         console.error(
-            "GENERATE REFERRAL ERROR:",
+            "❌ GENERATE REFERRAL ERROR:",
             err
         );
 
@@ -51,7 +66,13 @@ exports.me = async (req, res, next) => {
 
         const userId =
             req.user.userId ||
+            req.user.id ||
             req.user._id;
+
+        console.log(
+            "🔎 GET MY REFERRAL:",
+            userId
+        );
 
         const User =
             require("../user/user.model");
@@ -72,7 +93,7 @@ exports.me = async (req, res, next) => {
             });
         }
 
-        return res.json({
+        return res.status(200).json({
 
             success: true,
 
@@ -84,7 +105,7 @@ exports.me = async (req, res, next) => {
     } catch (err) {
 
         console.error(
-            "GET REFERRAL ERROR:",
+            "❌ GET REFERRAL ERROR:",
             err
         );
 
@@ -103,6 +124,7 @@ exports.complete = async (req, res, next) => {
 
         const referredUserId =
             req.user.userId ||
+            req.user.id ||
             req.user._id;
 
         const result =
@@ -111,7 +133,7 @@ exports.complete = async (req, res, next) => {
                 referredUserId
             );
 
-        res.json(result);
+        return res.json(result);
 
     } catch (err) {
 
@@ -128,12 +150,18 @@ exports.reward = async (req, res, next) => {
 
     try {
 
+        const referredUserId =
+            req.body.referredUserId ||
+            req.user.userId ||
+            req.user.id ||
+            req.user._id;
+
         const result =
             await service.rewardReferral(
-                req.body.referredUserId
+                referredUserId
             );
 
-        res.json(result);
+        return res.json(result);
 
     } catch (err) {
 
@@ -152,6 +180,7 @@ exports.mine = async (req, res, next) => {
 
         const userId =
             req.user.userId ||
+            req.user.id ||
             req.user._id;
 
         const result =
@@ -159,7 +188,7 @@ exports.mine = async (req, res, next) => {
                 userId
             );
 
-        res.json({
+        return res.json({
 
             success: true,
 
@@ -185,7 +214,13 @@ exports.stats = async (req, res, next) => {
         const result =
             await service.stats();
 
-        res.json(result);
+        return res.json({
+
+            success: true,
+
+            ...result
+
+        });
 
     } catch (err) {
 
