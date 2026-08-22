@@ -53,6 +53,37 @@ console.log("PLAN:", data.plan);
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 
+    // =====================================================
+// OPTIONAL REFERRAL USED DURING REGISTRATION
+// =====================================================
+
+let suppliedReferralCode =
+    data.referralCode?.trim().toUpperCase() || null;
+
+let referrer = null;
+
+if (suppliedReferralCode) {
+
+    console.log(
+        "🔎 REGISTRATION REFERRAL:",
+        suppliedReferralCode
+    );
+
+    referrer = await User.findOne({
+        referralCode: suppliedReferralCode
+    });
+
+    if (!referrer) {
+        throw new Error("Invalid referral number");
+    }
+
+    console.log(
+        "✅ REFERRER FOUND:",
+        referrer.username,
+        referrer.referralCode
+    );
+}
+
     const user = await User.create({
 
     firstName:data.firstName,
@@ -94,6 +125,11 @@ console.log("PLAN:", data.plan);
 
     marketingConsent:data.marketingConsent
 
+    referredBy: referrer
+    ? referrer._id
+    : null,
+
+referralRewarded: false
 
 });
 
@@ -103,6 +139,31 @@ await Profile.create({
 });
 
 await walletService.createWallet(user._id);
+
+// =====================================================
+// CREATE REFERRAL RECORD
+// =====================================================
+
+let referralRecord = null;
+
+if (suppliedReferralCode) {
+
+    console.log(
+        "🎁 CREATING REFERRAL RECORD FOR NEW USER:",
+        user._id.toString()
+    );
+
+    referralRecord =
+        await referralService.complete(
+            suppliedReferralCode,
+            user._id
+        );
+
+    console.log(
+        "✅ REFERRAL RECORD CREATED:",
+        referralRecord
+    );
+}
 
 // Get selected plan
 const selectedPlan =
