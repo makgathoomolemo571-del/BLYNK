@@ -1,80 +1,120 @@
-const service = require("./referral.service");
+const referralService =
+    require("./referral.service");
 
-exports.create = async (req, res, next) => {
 
-  try {
+// =====================================================
+// CREATE / GENERATE REFERRAL NUMBER
+// =====================================================
 
-    const result = await service.create(
-      req.user._id,
-      req.body.code
-    );
+exports.create = async (req, res) => {
 
-    res.status(201).json(result);
+    try {
 
-  } catch (err) {
-    next(err);
-  }
+        const userId = req.user.userId || req.user._id;
 
-};
+        console.log(
+            "GENERATE REFERRAL FOR USER:",
+            userId
+        );
 
-exports.complete = async (req, res, next) => {
+        const referralCode =
+            await referralService.createUserReferralCode(
+                userId
+            );
 
-  try {
+        return res.json({
 
-    const result = await service.complete(
-      req.body.code,
-      req.user._id
-    );
+            success: true,
 
-    res.json(result);
+            referralCode
 
-  } catch (err) {
-    next(err);
-  }
+        });
 
-};
+    } catch (error) {
 
-exports.reward = async (req, res, next) => {
+        console.error(
+            "CREATE REFERRAL ERROR:",
+            error
+        );
 
-  try {
+        return res.status(500).json({
 
-    const result = await service.reward(
-      req.params.id,
-      req.body.amount
-    );
+            success: false,
 
-    res.json(result);
+            message:
+                error.message ||
+                "Failed to generate referral number."
 
-  } catch (err) {
-    next(err);
-  }
+        });
 
-};
-
-exports.mine = async (req, res, next) => {
-
-  try {
-
-    const result = await service.getUserReferrals(
-      req.user._id
-    );
-
-    res.json(result);
-
-  } catch (err) {
-    next(err);
-  }
+    }
 
 };
 
-exports.stats = async (req, res, next) => {
 
-  try {
+// =====================================================
+// GET MY REFERRAL NUMBER
+// =====================================================
 
-    res.json(await service.stats());
+exports.mine = async (req, res) => {
 
-  } catch (err) {
-    next(err);
-  }
+    try {
+
+        const userId =
+            req.user.userId ||
+            req.user._id;
+
+        console.log(
+            "GET MY REFERRAL FOR USER:",
+            userId
+        );
+
+        const User =
+            require("../user/user.model");
+
+        const user =
+            await User.findById(userId)
+                .select("referralCode");
+
+        if (!user) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "User not found."
+
+            });
+
+        }
+
+        return res.json({
+
+            success: true,
+
+            referralCode:
+                user.referralCode || null
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "GET MY REFERRAL ERROR:",
+            error
+        );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                error.message ||
+                "Failed to fetch referral number."
+
+        });
+
+    }
 
 };
