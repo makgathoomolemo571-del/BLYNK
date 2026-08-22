@@ -14,6 +14,9 @@ sendNotification
 require("../notification/notification.helper");
 const PasswordReset = require("./passwordReset.model");
 
+const referralService =
+    require("../referral/referral.service");
+
 const emailService = require("./email.service");
 
 const User = require("../user/user.model");
