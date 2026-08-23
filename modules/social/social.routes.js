@@ -258,8 +258,8 @@ router.get(
 
 router.get(
   "/:userId/stats",
-  authMiddleware,
-  socialController.getStats
+  auth,
+ controller.getStats
 );
 
 module.exports = router;
