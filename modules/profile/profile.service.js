@@ -37,6 +37,9 @@ exports.getProfile = async (userId) => {
   if (!profile) {
     throw new Error("Profile not found");
   }
+const socialStats =
+  await SocialService.getStats(userId);
+
 const [posts, reels, followers, following] =
 await Promise.all([
     Post.countDocuments({
@@ -69,10 +72,16 @@ await Promise.all([
 profile = profile.toObject();
 
 profile.stats = {
-  posts,
-  reels,
-  followers,
-  following,
+  followers: socialStats.followers,
+    following: socialStats.following,
+    friends: socialStats.friends,
+
+    posts: postCount,
+    reels: reelCount,
+    stories: storyCount,
+    podcasts: podcastCount,
+
+    profileViews: profile.analytics?.profileViews || 0
 };
 
 const gallery = await Post.find({

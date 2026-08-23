@@ -41,22 +41,27 @@ async (userId, targetUserId) => {
 
 exports.unfollow = async (userId, targetId) => {
   await Social.updateOne(
-    { user: userId },
     {
-      $pull: { following: { user: targetId } }
+      user: userId,
+      targetUser: targetId,
+      relationshipType: "follow",
+      isDeleted: false
+    },
+    {
+      $set: {
+        isDeleted: true
+      }
     }
   );
 
-  await Social.updateOne(
-    { user: targetId },
-    {
-      $pull: { followers: { user: userId } }
-    }
-  );
+  eventBus.emit("USER_UNFOLLOWED", {
+    userId,
+    targetId
+  });
 
-  eventBus.emit("USER_UNFOLLOWED", { userId, targetId });
-
-  return { success: true };
+  return {
+    success: true
+  };
 };
 
 exports.block =
