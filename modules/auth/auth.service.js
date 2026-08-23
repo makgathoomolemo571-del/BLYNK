@@ -278,7 +278,7 @@ success: true,
         plan: data.plan
     };
 }
- }
+ 
 
   async login(email, password) {
     console.log("LOGIN EMAIL:", email);
