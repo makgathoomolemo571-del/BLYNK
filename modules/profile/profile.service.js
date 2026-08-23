@@ -47,131 +47,116 @@ exports.getProfile = async (userId) => {
   }
 
   // ==========================================
-  // REAL SOCIAL STATS FOR THIS USER
-  // ==========================================
-
-  const socialStats =
-    await SocialService.getStats(userId);
-
-  // ==========================================
-  // REAL CONTENT STATS
+  // REAL PROFILE STATS
   // ==========================================
 
   const [
-    posts,
-    reels
+    postCount,
+    reelCount,
+    followerCount,
+    followingCount,
+    friendCount
   ] = await Promise.all([
 
+    // POSTS CREATED BY THIS USER
     Post.countDocuments({
       creator: userId,
       isDeleted: false
     }),
 
+    // REELS CREATED BY THIS USER
     Reel.countDocuments({
       creator: userId,
+      isDeleted: false
+    }),
+
+    // PEOPLE FOLLOWING THIS USER
+    Follow.countDocuments({
+      targetUser: userId,
+      relationshipType: "follow",
+      status: "accepted",
+      isDeleted: false
+    }),
+
+    // PEOPLE THIS USER FOLLOWS
+    Follow.countDocuments({
+      user: userId,
+      relationshipType: "follow",
+      status: "accepted",
+      isDeleted: false
+    }),
+
+    // FRIENDS
+    Follow.countDocuments({
+      user: userId,
+      relationshipType: "friend",
+      status: "accepted",
       isDeleted: false
     })
 
   ]);
 
   // ==========================================
-  // PROFILE OBJECT
+  // CONVERT MONGOOSE DOCUMENT
   // ==========================================
 
-  const profileObject =
-    profile.toObject();
+  const profileObject = profile.toObject();
 
   // ==========================================
-  // REAL PROFILE STATS
+  // STATS
   // ==========================================
 
   profileObject.stats = {
 
-    followers:
-      socialStats.followers || 0,
+    followers: followerCount,
 
-    following:
-      socialStats.following || 0,
+    following: followingCount,
 
-    friends:
-      socialStats.friends || 0,
+    friends: friendCount,
 
-    posts:
-      posts || 0,
+    posts: postCount,
 
-    reels:
-      reels || 0,
+    reels: reelCount,
 
-    stories:
-      0,
+    stories: 0,
 
-    podcasts:
-      0,
+    podcasts: 0,
 
     profileViews:
-      profileObject.analytics?.profileViews || 0
-
+      profile.analytics?.profileViews || 0
   };
 
   // ==========================================
   // PROFILE GALLERY
   // ==========================================
 
-  const gallery =
-    await Post.find({
-      creator: userId,
-      isDeleted: false
-    })
+  profileObject.gallery = await Post.find({
+    creator: userId,
+    isDeleted: false
+  })
     .sort({ createdAt: -1 })
     .select(
       "media caption createdAt likes comments"
     );
 
-  profileObject.gallery = gallery;
-
-  // ==========================================
-  // DEBUG
-  // ==========================================
-
   console.log(
-    "========== PROFILE STATS =========="
+    "========== REAL PROFILE STATS =========="
   );
 
   console.log({
-    userId,
-
-    followers:
-      profileObject.stats.followers,
-
-    following:
-      profileObject.stats.following,
-
-    friends:
-      profileObject.stats.friends,
-
-    posts:
-      profileObject.stats.posts,
-
-    reels:
-      profileObject.stats.reels,
-
-    stories:
-      profileObject.stats.stories,
-
-    podcasts:
-      profileObject.stats.podcasts,
-
-    profileViews:
-      profileObject.stats.profileViews
+    userId: String(userId),
+    followers: followerCount,
+    following: followingCount,
+    friends: friendCount,
+    posts: postCount,
+    reels: reelCount
   });
 
   console.log(
-    "==================================="
+    "========================================="
   );
 
-  return new ProfileDTO(
-    profileObject
-  );
+  return new ProfileDTO(profileObject);
 };
 
 exports.getProfileById = async (userId) => {

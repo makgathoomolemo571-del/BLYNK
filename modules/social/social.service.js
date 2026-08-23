@@ -14,18 +14,34 @@ require("./social.events");
 const FriendRequest = require("../social/friendRequest.model");
 const User = require("../user/user.model");
 
-exports.follow =
-async (userId, targetUserId) => {
+exports.follow = async (userId, targetUserId) => {
 
-  const social =
-  await Social.create({
+  if (String(userId) === String(targetUserId)) {
+    throw new Error("You cannot follow yourself");
+  }
+
+  const existing = await Social.findOne({
+    user: userId,
+    targetUser: targetUserId,
+    relationshipType: "follow",
+    isDeleted: false
+  });
+
+  if (existing) {
+    return mapper.toDTO(existing);
+  }
+
+  const social = await Social.create({
 
     user: userId,
 
     targetUser: targetUserId,
 
-    relationshipType:
-      "follow"
+    relationshipType: "follow",
+
+    status: "accepted",
+
+    isDeleted: false
 
   });
 
@@ -34,9 +50,7 @@ async (userId, targetUserId) => {
     social
   );
 
-  return mapper.toDTO(
-    social
-  );
+  return mapper.toDTO(social);
 };
 
 exports.unfollow = async (userId, targetId) => {
