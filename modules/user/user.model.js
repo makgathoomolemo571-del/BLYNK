@@ -140,6 +140,11 @@ referralRewarded: {
     default: false
 },
 
+blynkTokens: {
+    type: Number,
+    default: 0
+},
+
 blynkPoints: {
     type: Number,
     default: 0,
