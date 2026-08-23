@@ -304,3 +304,32 @@ exports.sentRequests = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.getStats = async (req, res) => {
+
+  try {
+
+    const stats =
+      await socialService.getStats(
+        req.params.userId
+      );
+
+    return res.status(200).json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error) {
+
+    console.error(
+      "SOCIAL STATS ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+
+  }
+};

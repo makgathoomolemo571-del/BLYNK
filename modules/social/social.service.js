@@ -397,3 +397,49 @@ exports.getSentRequests = async (userId) => {
     status: "pending"
   });
 };
+
+// ======================
+// REAL SOCIAL STATISTICS
+// ======================
+exports.getStats = async (userId) => {
+  const [
+    followers,
+    following,
+    friends,
+    blocked
+  ] = await Promise.all([
+
+    Social.countDocuments({
+      targetUser: userId,
+      relationshipType: "follow",
+      isDeleted: false
+    }),
+
+    Social.countDocuments({
+      user: userId,
+      relationshipType: "follow",
+      isDeleted: false
+    }),
+
+    Social.countDocuments({
+      user: userId,
+      relationshipType: "friend",
+      status: "accepted",
+      isDeleted: false
+    }),
+
+    Social.countDocuments({
+      user: userId,
+      relationshipType: "blocked",
+      isDeleted: false
+    })
+
+  ]);
+
+  return {
+    followers,
+    following,
+    friends,
+    blocked
+  };
+};
