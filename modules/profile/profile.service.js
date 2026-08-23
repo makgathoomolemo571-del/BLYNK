@@ -4,6 +4,7 @@ const Reel = require("../reel/reel.model");
 const Follow = require("../social/social.model");
 const ProfileDTO = require("./profile.dto");
 const cloudinary = require("../../config/cloudinary");
+const SocialService = require("../social/social.service");
 
 exports.createProfile = async (userId, data) => {
 profile = await Profile.create({
