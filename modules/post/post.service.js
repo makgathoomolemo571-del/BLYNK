@@ -12,57 +12,52 @@ const eventBus = require("../../shared/eventBus");
 const EVENTS = require("./post.events");
 
 
-exports.create =
-async (userId, data) => {
+exports.create = async (userId, data) => {
 
-  const post =
-  await Post.create({
-
+  const post = await Post.create({
     creator: userId,
 
-    caption:
-      data.caption,
+    caption: data.caption || "",
 
-    visibility:
-      data.visibility,
+    visibility: data.visibility || "public",
 
-    media:
-      data.media || []
-
+    media: Array.isArray(data.media)
+      ? data.media
+      : []
   });
 
   await post.populate({
-path:"sharedPost",
-populate:{
-path:"creator",
-path: "media",
-path: "caption",
-select:"username profilePicture"
-}
-});
+    path: "creator",
+    select: "username profilePicture"
+  });
 
-await sendNotification({
+  if (post.sharedPost) {
+    await post.populate({
+      path: "sharedPost",
+      populate: {
+        path: "creator",
+        select: "username profilePicture"
+      }
+    });
+  }
 
-recipient:
-post.author,
+  await sendNotification({
+    recipient: userId,
+    actor: userId,
+    type: "POST_CREATED",
+    title: "Post Published",
+    message: "Your post is now live",
+    entityType: "POST",
+    entityId: post._id
+  });
 
-actor:
-post.author,
-
-type:"POST_CREATED",
-
-title:
-"Post Published",
-
-message:
-"Your post is now live",
-
-entityType:"POST",
-
-entityId:
-post._id
-
-});
+  eventBus.emit(
+    EVENTS.POST_CREATED,
+    {
+      postId: post._id,
+      userId
+    }
+  );
 
   return mapper.toDTO(post);
 };
