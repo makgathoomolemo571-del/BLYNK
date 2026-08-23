@@ -19,7 +19,7 @@ router.post(
         permission: "CREATE_POST",
         content: true,
         media: true,
-        file: true,
+        file: false,
         storage: true,
         feature: "CREATE_POST",
         audit: "POST_CREATE"
