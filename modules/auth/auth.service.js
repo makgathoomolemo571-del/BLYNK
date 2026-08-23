@@ -41,241 +41,333 @@ class AuthService {
   return user;
 }
     
- async register(data) {
-console.log("REGISTER DATA:");
-console.log(data);
-console.log("ROLE:", data.role);
-console.log("PLAN:", data.plan);
+async register(data) {
+
+    console.log("REGISTER DATA:");
+    console.log(data);
+    console.log("ROLE:", data.role);
+    console.log("PLAN:", data.plan);
+
+    // =====================================================
+    // CHECK EXISTING USER
+    // =====================================================
+
     const existingUser = await User.findOne({
-        email: data.email
+        email: data.email.toLowerCase()
     });
 
     if (existingUser) {
         throw new Error("Email already exists");
     }
 
-    const passwordHash = await bcrypt.hash(data.password, 10);
+    // =====================================================
+    // PASSWORD
+    // =====================================================
+
+    const passwordHash = await bcrypt.hash(
+        data.password,
+        10
+    );
 
     // =====================================================
-// OPTIONAL REFERRAL USED DURING REGISTRATION
-// =====================================================
+    // REFERRAL
+    // =====================================================
 
-let suppliedReferralCode =
-    data.referralCode?.trim().toUpperCase() || null;
+    let suppliedReferralCode =
+        data.referralCode?.trim().toUpperCase() || null;
 
-let referrer = null;
+    let referrer = null;
 
-if (suppliedReferralCode) {
+    if (suppliedReferralCode) {
 
-    console.log(
-        "🔎 REGISTRATION REFERRAL:",
-        suppliedReferralCode
-    );
+        console.log(
+            "🔎 REGISTRATION REFERRAL:",
+            suppliedReferralCode
+        );
 
-    referrer = await User.findOne({
-        referralCode: suppliedReferralCode
-    });
+        referrer = await User.findOne({
+            referralCode: suppliedReferralCode
+        });
 
-    if (!referrer) {
-        throw new Error("Invalid referral number");
+        if (!referrer) {
+            throw new Error("Invalid referral number");
+        }
+
+        console.log(
+            "✅ REFERRER FOUND:",
+            referrer.username,
+            referrer.referralCode
+        );
     }
 
-    console.log(
-        "✅ REFERRER FOUND:",
-        referrer.username,
-        referrer.referralCode
-    );
-}
+    // =====================================================
+    // SELECT PLAN
+    // =====================================================
+
+    const selectedPlan =
+        plans[data.plan];
+
+    if (!selectedPlan) {
+        throw new Error("Invalid subscription plan");
+    }
+
+    // =====================================================
+    // CREATE USER
+    // =====================================================
 
     const user = await User.create({
 
-    firstName:data.firstName,
+        firstName: data.firstName,
 
-    lastName:data.lastName,
+        lastName: data.lastName,
 
-    displayName:data.displayName,
+        displayName: data.displayName,
 
-    username:data.username,
+        username: data.username,
 
-    email:data.email.toLowerCase(),
+        email: data.email.toLowerCase(),
 
-    phone:data.phone,
+        phone: data.phone,
 
-    country:data.country,
+        country: data.country,
 
-    province:data.province,
+        province: data.province,
 
-    city:data.city,
+        city: data.city,
 
-    dateOfBirth:data.dateOfBirth,
+        dateOfBirth: data.dateOfBirth,
 
-    gender:data.gender,
+        gender: data.gender,
 
-    password:passwordHash,
+        password: passwordHash,
 
-    role:data.role,
+        role: data.role,
 
-    subscriptionPlan:data.plan,
+        subscriptionPlan: data.plan,
 
-    emailVerified:false,
-    verified:false,
+        emailVerified: false,
 
-    status:"active",
+        verified: false,
 
-    acceptTerms:data.acceptTerms,
+        status: "active",
 
-    acceptPrivacy:data.acceptPrivacy,
+        acceptTerms: data.acceptTerms,
 
-    marketingConsent:data.marketingConsent,
+        acceptPrivacy: data.acceptPrivacy,
 
-    referredBy: referrer
-    ? referrer._id
-    : null,
+        marketingConsent: data.marketingConsent,
 
-referralRewarded: false
+        referredBy: referrer
+            ? referrer._id
+            : null,
 
-});
+        referralRewarded: false
 
-await Profile.create({
-    user: user._id,
-    displayName: user.username
-});
-
-await walletService.createWallet(user._id);
-
-// =====================================================
-// CREATE REFERRAL RECORD
-// =====================================================
-
-let referralRecord = null;
-
-if (suppliedReferralCode) {
-
-    console.log(
-        "🎁 CREATING REFERRAL RECORD FOR NEW USER:",
-        user._id.toString()
-    );
-
-    referralRecord =
-        await referralService.complete(
-            suppliedReferralCode,
-            user._id
-        );
-
-    console.log(
-        "✅ REFERRAL RECORD CREATED:",
-        referralRecord
-    );
-}
-
-// Get selected plan
-const selectedPlan =
-    plans[data.plan] || plans.FREE_MEMBER;
-
-// Invalid plan
-if (!selectedPlan) {
-    throw new Error("Invalid subscription plan");
-}
-
-let paymentRequired = false;
-let paymentAmount = 0;
-
-// Paid plan
-if (selectedPlan.price > 0) {
-
-    await subscriptionService.create(
-        user._id,
-        data.plan,
-        "pending_payment"
-    );
-
-     paymentRequired = true;
-    paymentAmount = selectedPlan.price;
-
-} else {
-
-// Free plan
-await subscriptionService.create(
-    user._id,
-    data.plan,
-    "active"
-);
-
-   if (data.role === "member") {
-    // only MEMBER plans
-}
-
-if (data.role === "creator") {
-    // only CREATOR plans
-}
-
-if (data.role === "business") {
-    // only BUSINESS plans
-}
-
-await sendNotification({
-
-recipient:user._id,
-
-type:"WELCOME",
-
-title:"Welcome to BLYNK",
-
-message:
-"Your account has been created successfully",
-
-entityType:"USER",
-
-entityId:user._id
-
-});
-
-    emitUserRegistered({
-        userId: user._id
     });
 
-   const requireVerification =
-    process.env.REQUIRE_EMAIL_VERIFICATION === "true";
+    // =====================================================
+    // CREATE PROFILE
+    // =====================================================
 
-if (requireVerification && !user.emailVerified) {
+    await Profile.create({
 
-    console.log("EMAIL VERIFICATION REQUIRED");
+        user: user._id,
 
-    const token =
-        await tokenService.createEmailVerificationToken(
-            user._id
-        );
+        displayName: user.username
 
-    console.log("TOKEN CREATED:", token);
+    });
 
-    await emailService.sendVerificationEmail(
-        user,
-        token
+    // =====================================================
+    // CREATE WALLET
+    // =====================================================
+
+    await walletService.createWallet(
+        user._id
     );
 
-    console.log("EMAIL SENT");
+    // =====================================================
+    // CREATE REFERRAL RECORD
+    // =====================================================
+
+    let referralRecord = null;
+
+    if (suppliedReferralCode) {
+
+        console.log(
+            "🎁 CREATING REFERRAL RECORD FOR NEW USER:",
+            user._id.toString()
+        );
+
+        referralRecord =
+            await referralService.complete(
+                suppliedReferralCode,
+                user._id
+            );
+
+        console.log(
+            "✅ REFERRAL RECORD CREATED:",
+            referralRecord
+        );
+    }
+
+    // =====================================================
+    // SUBSCRIPTION
+    // =====================================================
+
+    let paymentRequired = false;
+
+    let paymentAmount = 0;
+
+    if (selectedPlan.price > 0) {
+
+        // Paid plan
+        await subscriptionService.create(
+            user._id,
+            data.plan,
+            "pending_payment"
+        );
+
+        paymentRequired = true;
+
+        paymentAmount =
+            selectedPlan.price;
+
+        console.log(
+            "💳 PAID PLAN:",
+            data.plan,
+            paymentAmount
+        );
+
+    } else {
+
+        // Free plan
+        await subscriptionService.create(
+            user._id,
+            data.plan,
+            "active"
+        );
+
+        console.log(
+            "🆓 FREE PLAN:",
+            data.plan
+        );
+    }
+
+    // =====================================================
+    // WELCOME NOTIFICATION
+    // =====================================================
+
+    await sendNotification({
+
+        recipient: user._id,
+
+        type: "WELCOME",
+
+        title: "Welcome to BLYNK",
+
+        message:
+            "Your account has been created successfully",
+
+        entityType: "USER",
+
+        entityId: user._id
+
+    });
+
+    // =====================================================
+    // USER REGISTERED EVENT
+    // =====================================================
+
+    emitUserRegistered({
+
+        userId: user._id
+
+    });
+
+    // =====================================================
+    // EMAIL VERIFICATION
+    // =====================================================
+
+    const requireVerification =
+        process.env.REQUIRE_EMAIL_VERIFICATION === "true";
+
+    if (
+        requireVerification &&
+        !user.emailVerified
+    ) {
+
+        console.log(
+            "EMAIL VERIFICATION REQUIRED"
+        );
+
+        const token =
+            await tokenService.createEmailVerificationToken(
+                user._id
+            );
+
+        console.log(
+            "TOKEN CREATED:",
+            token
+        );
+
+        await emailService.sendVerificationEmail(
+            user,
+            token
+        );
+
+        console.log(
+            "EMAIL SENT"
+        );
+    }
+
+    // =====================================================
+    // REGISTRATION RESPONSE
+    // =====================================================
 
     return {
-success: true,
-    message: "Please verify your email. A new verification email has been sent.",
-   
-     user: {
-        id: user._id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        username: user.username,
-        displayName: user.displayName,
-        email: user.email,
-        role: user.role,
-        subscriptionPlan: user.subscriptionPlan,
-        
-    },
-        
-   paymentRequired,
 
-        amount: paymentAmount,
+        success: true,
 
-        plan: data.plan
+        message:
+            requireVerification
+                ? "Account created. Please verify your email."
+                : "Account created successfully.",
+
+        user: {
+
+            id: user._id,
+
+            firstName:
+                user.firstName,
+
+            lastName:
+                user.lastName,
+
+            username:
+                user.username,
+
+            displayName:
+                user.displayName,
+
+            email:
+                user.email,
+
+            role:
+                user.role,
+
+            subscriptionPlan:
+                user.subscriptionPlan
+
+        },
+
+        paymentRequired,
+
+        amount:
+            paymentAmount,
+
+        plan:
+            data.plan
+
     };
 }
  
