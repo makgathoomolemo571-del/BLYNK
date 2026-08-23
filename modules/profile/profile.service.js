@@ -7,99 +7,171 @@ const cloudinary = require("../../config/cloudinary");
 const SocialService = require("../social/social.service");
 
 exports.createProfile = async (userId, data) => {
-profile = await Profile.create({
-    user: userId,
-    ...data
-});
 
-  let profile = await Profile.findOne({ user: userId });
+  let profile =
+    await Profile.findOne({
+      user: userId
+    });
 
-  if (profile) {
-    return new ProfileDTO(profile);
+  if (!profile) {
+
+    profile =
+      await Profile.create({
+        user: userId,
+        ...data
+      });
+
   }
 
-  profile = await Profile.findById(profile._id)
-.populate(
-    "user",
-    "username displayName role subscriptionPlan verified emailVerified profilePicture coverBanner"
-);
+  profile =
+    await Profile.findById(
+      profile._id
+    ).populate(
+      "user",
+      "username displayName role subscriptionPlan verified emailVerified profilePicture coverBanner referralCode"
+    );
 
   return new ProfileDTO(profile);
 };
 
 exports.getProfile = async (userId) => {
-  let profile = await Profile.findOne({ user: userId })
-.populate(
-  "user",
-  "username displayName role subscriptionPlan verified emailVerified profilePicture coverBanner"
-);
 
+  const profile = await Profile.findOne({ user: userId })
+    .populate(
+      "user",
+      "username displayName role subscriptionPlan verified emailVerified profilePicture coverBanner referralCode"
+    );
 
   if (!profile) {
     throw new Error("Profile not found");
   }
-const socialStats =
-  await SocialService.getStats(userId);
 
-const [posts, reels, followers, following] =
-await Promise.all([
+  // ==========================================
+  // REAL SOCIAL STATS FOR THIS USER
+  // ==========================================
+
+  const socialStats =
+    await SocialService.getStats(userId);
+
+  // ==========================================
+  // REAL CONTENT STATS
+  // ==========================================
+
+  const [
+    posts,
+    reels
+  ] = await Promise.all([
+
     Post.countDocuments({
-        creator: userId,
-        isDeleted:false
+      creator: userId,
+      isDeleted: false
     }),
 
     Reel.countDocuments({
-        creator: userId,
-        isDeleted:false
-    }),
+      creator: userId,
+      isDeleted: false
+    })
 
-   // People following THIS user
-  Follow.countDocuments({
-    targetUser: userId,
-    relationshipType: "follow",
-    status: "accepted",
-    isDeleted: false,
-  }),
+  ]);
 
-  // People THIS user follows
-  Follow.countDocuments({
-    user: userId,
-    relationshipType: "follow",
-    status: "accepted",
-    isDeleted: false,
-  }),
-]);
+  // ==========================================
+  // PROFILE OBJECT
+  // ==========================================
 
-profile = profile.toObject();
+  const profileObject =
+    profile.toObject();
 
-profile.stats = {
-  followers: socialStats.followers,
-    following: socialStats.following,
-    friends: socialStats.friends,
+  // ==========================================
+  // REAL PROFILE STATS
+  // ==========================================
 
-    posts: postCount,
-    reels: reelCount,
-    stories: storyCount,
-    podcasts: podcastCount,
+  profileObject.stats = {
 
-    profileViews: profile.analytics?.profileViews || 0
-};
+    followers:
+      socialStats.followers || 0,
 
-const gallery = await Post.find({
-  creator: userId,
-  isDeleted: false,
-})
-.sort({ createdAt: -1 })
-.select("media caption createdAt likes comments");
+    following:
+      socialStats.following || 0,
 
-profile.gallery = gallery;
-console.log({
-  posts,
-  reels,
-  followers,
-  following,
-});
-return new ProfileDTO(profile);
+    friends:
+      socialStats.friends || 0,
+
+    posts:
+      posts || 0,
+
+    reels:
+      reels || 0,
+
+    stories:
+      0,
+
+    podcasts:
+      0,
+
+    profileViews:
+      profileObject.analytics?.profileViews || 0
+
+  };
+
+  // ==========================================
+  // PROFILE GALLERY
+  // ==========================================
+
+  const gallery =
+    await Post.find({
+      creator: userId,
+      isDeleted: false
+    })
+    .sort({ createdAt: -1 })
+    .select(
+      "media caption createdAt likes comments"
+    );
+
+  profileObject.gallery = gallery;
+
+  // ==========================================
+  // DEBUG
+  // ==========================================
+
+  console.log(
+    "========== PROFILE STATS =========="
+  );
+
+  console.log({
+    userId,
+
+    followers:
+      profileObject.stats.followers,
+
+    following:
+      profileObject.stats.following,
+
+    friends:
+      profileObject.stats.friends,
+
+    posts:
+      profileObject.stats.posts,
+
+    reels:
+      profileObject.stats.reels,
+
+    stories:
+      profileObject.stats.stories,
+
+    podcasts:
+      profileObject.stats.podcasts,
+
+    profileViews:
+      profileObject.stats.profileViews
+  });
+
+  console.log(
+    "==================================="
+  );
+
+  return new ProfileDTO(
+    profileObject
+  );
 };
 
 exports.getProfileById = async (userId) => {
