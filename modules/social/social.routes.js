@@ -256,4 +256,10 @@ router.get(
     controller.sentRequests
 );
 
+router.get(
+  "/:userId/stats",
+  authMiddleware,
+  socialController.getStats
+);
+
 module.exports = router;
