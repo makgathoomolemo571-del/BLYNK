@@ -116,21 +116,38 @@ return true;
 
 // FEED
 exports.feed = async () => {
-  const posts = await Post.find({ isDeleted: false })
-   .populate("creator", "username profilePicture")
-.populate("comments.user", "username profilePicture")
-.populate("comments.replies.user", "username profilePicture")
-.populate({
-    path: "sharedPost",
-    populate: {
+
+  const posts = await Post.find({
+    isDeleted: false
+  })
+
+    .populate(
+      "creator",
+      "username profilePicture"
+    )
+
+    .populate(
+      "comments.user",
+      "username profilePicture"
+    )
+
+    .populate(
+      "comments.replies.user",
+      "username profilePicture"
+    )
+
+    .populate({
+      path: "sharedPost",
+      populate: {
         path: "creator",
         select: "username profilePicture"
-    }
-})
+      }
+    })
 
+    .sort({
+      createdAt: -1
+    });
 
-    .sort({ createdAt: -1 });
-console.log(JSON.stringify(posts[0], null, 2));
   return mapper.toDTOList(posts);
 };
 
