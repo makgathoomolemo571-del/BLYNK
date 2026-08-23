@@ -140,6 +140,31 @@ referralRewarded: {
     default: false
 },
 
+blynkPoints: {
+    type: Number,
+    default: 0,
+    min: 0
+},
+
+blynkRewardHistory: [
+    {
+        points: {
+            type: Number,
+            required: true
+        },
+
+        reason: {
+            type: String,
+            required: true
+        },
+
+        date: {
+            type: Date,
+            default: Date.now
+        }
+    }
+],
+
     permissions:{
         type:[String],
         default:[]

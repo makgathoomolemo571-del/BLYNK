@@ -2,53 +2,106 @@ const User = require("../user/user.model");
 
 const rewardEngine = {
 
-  async addVigPoints(userId, points, reason = "activity") {
+    // =====================================================
+    // ADD BLYNK POINTS
+    // =====================================================
 
-    const user = await User.findById(userId);
+    async addBlynkPoints(
+        userId,
+        points,
+        reason = "activity"
+    ) {
 
-    if (!user) throw new Error("User not found");
+        const user =
+            await User.findById(userId);
 
-    user.vigPoints = (user.vigPoints || 0) + points;
+        if (!user) {
+            throw new Error("User not found");
+        }
 
-    user.rewardHistory.push({
-      points,
-      reason,
-      date: new Date()
-    });
+        user.blynkPoints =
+            (user.blynkPoints || 0) + points;
 
-    await user.save();
+        if (!Array.isArray(user.blynkRewardHistory)) {
+            user.blynkRewardHistory = [];
+        }
 
-    return user.vigPoints;
+        user.blynkRewardHistory.push({
 
-  },
+            points,
 
-  async redeem(userId, points) {
+            reason,
 
-    const user = await User.findById(userId);
+            date: new Date()
 
-    if (user.vigPoints < points) {
-      throw new Error("Insufficient VIG points");
+        });
+
+        await user.save();
+
+        return user.blynkPoints;
+    },
+
+
+    // =====================================================
+    // REDEEM BLYNK POINTS
+    // =====================================================
+
+    async redeem(
+        userId,
+        points
+    ) {
+
+        const user =
+            await User.findById(userId);
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        if (
+            (user.blynkPoints || 0) <
+            points
+        ) {
+
+            throw new Error(
+                "Insufficient BLYNK points"
+            );
+        }
+
+        user.blynkPoints -= points;
+
+        await user.save();
+
+        return user.blynkPoints;
+    },
+
+
+    // =====================================================
+    // BLYNK POINT STATS
+    // =====================================================
+
+    async stats(userId) {
+
+        const user =
+            await User.findById(userId);
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        return {
+
+            blynkPoints:
+                user.blynkPoints || 0,
+
+            history:
+                user.blynkRewardHistory || []
+
+        };
     }
-
-    user.vigPoints -= points;
-
-    await user.save();
-
-    return user.vigPoints;
-
-  },
-
-  async stats(userId) {
-
-    const user = await User.findById(userId);
-
-    return {
-      vigPoints: user.vigPoints || 0,
-      history: user.rewardHistory || []
-    };
-
-  }
 
 };
 
-module.exports = rewardEngine;
+
+module.exports =
+    rewardEngine;

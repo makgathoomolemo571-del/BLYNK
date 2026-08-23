@@ -136,13 +136,13 @@ module.exports = {
                 referrerReward: {
                     tokens: 1000,
                     points: 10,
-                    rewardGiven: false
+                    rewardGiven: true
                 },
 
                 referredUserReward: {
                     tokens: 500,
                     points: 5,
-                    rewardGiven: false
+                    rewardGiven: true
                 }
 
             });
