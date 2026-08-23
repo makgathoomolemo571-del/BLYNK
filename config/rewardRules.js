@@ -1,53 +1,47 @@
-module.exports={
+// config/blynkRewards.js
 
-currency:{
+module.exports = {
 
-wallet:"TOKENS",
+    currency: {
+        wallet: "BLYNK_TOKENS",
+        points: "BLYNK_POINTS"
+    },
 
-points:"VIG_POINTS"
+    conversion: {
 
-},
+        tokensPerPoint: 100,
 
-conversion:{
+        vouchers: {
+            1000:  "R10",
+            2500:  "R25",
+            5000:  "R50",
+            10000: "R100",
+            25000: "R250",
+            50000: "R500"
+        }
 
-1000:"R10 Voucher",
+    },
 
-2500:"R25 Voucher",
+    voucherCategories: [
+        "Shopping",
+        "Fuel",
+        "Food",
+        "Electricity",
+        "Airtime",
+        "Data",
+        "Entertainment"
+    ],
 
-5000:"R50 Voucher",
+    restrictions: {
 
-10000:"R100 Voucher",
+        allowCashWithdrawal: false,
 
-25000:"R250 Voucher",
+        allowVoucherRedemption: true,
 
-50000:"R500 Voucher"
+        allowPointTransfer: false,
 
-},
+        allowTokenTransfer: false
 
-vouchers:[
-
-"Shopping",
-
-"Fuel",
-
-"Food",
-
-"Electricity",
-
-"Airtime",
-
-"Data",
-
-"Entertainment"
-
-],
-
-allowCashWithdrawal:false,
-
-allowVoucherRedemption:true,
-
-allowPointTransfer:false,
-
-allowTokenTransfer:false
+    }
 
 };
