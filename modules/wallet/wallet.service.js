@@ -13,11 +13,19 @@ require("../../shared/eventBus");
 const events =
 require("./wallet.events");
 
-exports.createWallet =
-async (userId) => {
+const validateUserId = (userId) => {
+  if (!userId) {
+    throw new Error("Wallet operation requires a user ID");
+  }
 
-  let wallet =
-  await Wallet.findOne({
+  return userId;
+};
+
+exports.createWallet = async (userId) => {
+
+  validateUserId(userId);
+
+  let wallet = await Wallet.findOne({
     user: userId
   });
 
@@ -25,8 +33,7 @@ async (userId) => {
     return walletMapper.toDTO(wallet);
   }
 
-  wallet =
-  await Wallet.create({
+  wallet = await Wallet.create({
     user: userId
   });
 
@@ -43,26 +50,31 @@ async (userId) => {
 
 exports.getMine = async (userId) => {
 
-    let wallet = await Wallet.findOne({
-        user: userId
+  validateUserId(userId);
+
+  let wallet = await Wallet.findOne({
+    user: userId
+  });
+
+  if (!wallet) {
+
+    wallet = await Wallet.create({
+      user: userId,
+      balance: 0,
+      currency: "ZAR",
+      status: "active"
     });
 
-    if (!wallet) {
+    eventBus.emit(
+      events.WALLET_CREATED,
+      {
+        userId,
+        walletId: wallet._id
+      }
+    );
+  }
 
-        wallet = await Wallet.create({
-            user: userId,
-            balance: 0,
-            currency: "ZAR",
-            status: "active"
-        });
-
-        eventBus.emit(events.WALLET_CREATED, {
-            userId,
-            walletId: wallet._id
-        });
-    }
-
-    return walletMapper.toDTO(wallet);
+  return walletMapper.toDTO(wallet);
 };
 
 exports.deposit =

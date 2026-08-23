@@ -1,85 +1,141 @@
-const service =
-require("./wallet.service");
+const service = require("./wallet.service");
 
-exports.create =
-async (req,res,next) => {
+const getUserId = (req) => {
+  return req.user?.userId || req.user?._id || req.user?.id;
+};
 
+exports.create = async (req, res, next) => {
   try {
+    const userId = getUserId(req);
 
-    const result =
-    await service.createWallet(
-      req.user.userId
-    );
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "USER_ID_MISSING",
+          message: "Authenticated user ID is missing"
+        }
+      });
+    }
 
-    res.status(201)
-      .json(result);
+    const result = await service.createWallet(userId);
 
-  } catch(err) {
+    res.status(201).json({
+      success: true,
+      data: result
+    });
+
+  } catch (err) {
     next(err);
   }
 };
 
 exports.getMine = async (req, res, next) => {
-    try {
+  try {
+    const userId = getUserId(req);
 
-        const wallet = await service.getMine(req.user.userId);
-
-        res.json(wallet);
-
-    } catch (err) {
-        next(err);
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "USER_ID_MISSING",
+          message: "Authenticated user ID is missing"
+        }
+      });
     }
-};
 
-exports.deposit =
-async (req,res,next) => {
+    const wallet = await service.getMine(userId);
 
-  try {
+    res.json({
+      success: true,
+      data: wallet
+    });
 
-    const result =
-    await service.deposit(
-      req.user._id,
-      req.body.amount
-    );
-
-    res.json(result);
-
-  } catch(err) {
+  } catch (err) {
     next(err);
   }
 };
 
-exports.withdraw =
-async (req,res,next) => {
-
+exports.deposit = async (req, res, next) => {
   try {
+    const userId = getUserId(req);
 
-    const result =
-    await service.withdraw(
-      req.user._id,
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "USER_ID_MISSING",
+          message: "Authenticated user ID is missing"
+        }
+      });
+    }
+
+    const result = await service.deposit(
+      userId,
       req.body.amount
     );
 
-    res.json(result);
+    res.json({
+      success: true,
+      data: result
+    });
 
-  } catch(err) {
+  } catch (err) {
     next(err);
   }
 };
 
-exports.transactions =
-async (req,res,next) => {
-
+exports.withdraw = async (req, res, next) => {
   try {
+    const userId = getUserId(req);
 
-    const result =
-    await service.getTransactions(
-      req.user._id
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "USER_ID_MISSING",
+          message: "Authenticated user ID is missing"
+        }
+      });
+    }
+
+    const result = await service.withdraw(
+      userId,
+      req.body.amount
     );
 
-    res.json(result);
+    res.json({
+      success: true,
+      data: result
+    });
 
-  } catch(err) {
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.transactions = async (req, res, next) => {
+  try {
+    const userId = getUserId(req);
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: "USER_ID_MISSING",
+          message: "Authenticated user ID is missing"
+        }
+      });
+    }
+
+    const result = await service.getTransactions(userId);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (err) {
     next(err);
   }
 };
