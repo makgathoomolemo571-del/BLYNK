@@ -177,6 +177,9 @@ if (!selectedPlan) {
     throw new Error("Invalid subscription plan");
 }
 
+let paymentRequired = false;
+let paymentAmount = 0;
+
 // Paid plan
 if (selectedPlan.price > 0) {
 
@@ -186,13 +189,10 @@ if (selectedPlan.price > 0) {
         "pending_payment"
     );
 
-    return {
-        user,
-        paymentRequired: true,
-        amount: selectedPlan.price,
-        plan: data.plan
-    };
-}
+     paymentRequired = true;
+    paymentAmount = selectedPlan.price;
+
+} else {
 
 // Free plan
 await subscriptionService.create(
@@ -269,8 +269,13 @@ success: true,
         role: user.role,
         subscriptionPlan: user.subscriptionPlan,
         
-    }
+    },
         
+   paymentRequired,
+
+        amount: paymentAmount,
+
+        plan: data.plan
     };
 }
  }

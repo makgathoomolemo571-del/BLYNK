@@ -171,12 +171,12 @@ module.exports = {
         );
 
         console.log(
-            "REFERRER REWARD: 1000 TOKENS / 10 POINTS"
-        );
+    "REFERRER REWARD: 1000 BLYNK TOKENS / 10 BLYNK POINTS"
+);
 
-        console.log(
-            "NEW USER REWARD: 500 TOKENS / 5 POINTS"
-        );
+console.log(
+    "NEW USER REWARD: 500 BLYNK TOKENS / 5 BLYNK POINTS"
+);
 
         eventBus.emit(
             events.REFERRAL_COMPLETED,
@@ -220,21 +220,27 @@ async rewardReferral(referredUserId) {
     // PREVENT DOUBLE REWARD
     // =================================================
 
-    if (
-        referral.referrerReward.rewardGiven &&
-        referral.referredUserReward.rewardGiven
-    ) {
+   const referrerAlreadyRewarded =
+    referral.referrerReward?.rewardGiven === true;
 
-        console.log(
-            "⚠️ REFERRAL ALREADY REWARDED"
-        );
+const referredUserAlreadyRewarded =
+    referral.referredUserReward?.rewardGiven === true;
 
-        return {
-            rewarded: false,
-            alreadyRewarded: true,
-            message: "Referral already rewarded"
-        };
-    }
+if (
+    referrerAlreadyRewarded &&
+    referredUserAlreadyRewarded
+) {
+
+    console.log(
+        "⚠️ REFERRAL ALREADY FULLY REWARDED"
+    );
+
+    return {
+        rewarded: false,
+        alreadyRewarded: true,
+        message: "Referral already rewarded"
+    };
+}
 
 
     // =================================================
